@@ -7,11 +7,6 @@ const id: Ref<string> = ref("");
 
 const { data: songList, isLoading: listLoading } = useSongList(start);
 
-const seeSongDetails = (id_song: string) => {
-  id.value = id_song;
-  console.log(id.value);
-};
-
 const updateStart = (newStart: number) => {
   if (newStart < 0) {
     start.value = 0;
