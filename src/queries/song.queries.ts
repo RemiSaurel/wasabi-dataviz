@@ -5,11 +5,13 @@ import {Ref} from "vue";
 
 export const songKeys = createQueryKeys("Song", {
     songListByStart: (start: Ref<number>) => ({
-        queryKey: ["start", start.value],
-        queryFn: () => fetchAllSongs(start.value),
+        queryKey: ["start", start],
+        queryFn: () => fetchAllSongs(start),
     }),
 });
 
 export function useSongList(start: Ref<number>) {
-    return useQuery({...songKeys.songListByStart(start)});
+    return useQuery(songKeys.songListByStart(start));
 }
+
+
