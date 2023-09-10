@@ -33,7 +33,7 @@ const filterResults = computed(() => {
         <button>All Songs</button>
       </router-link>
     </div>
-    <div class="flex flex-col gap-2">
+    <div class="flex flex-col gap-2 w-80">
       <div>
         <input
           type="text"
