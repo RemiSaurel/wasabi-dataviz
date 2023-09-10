@@ -5,17 +5,17 @@ import ArtistPage from "../pages/ArtistPage.vue";
 
 const routes = [
   {
-    path: "/",
+    path: "/wasabi-dataviz/",
     name: "Home",
     component: HomePage,
   },
   {
-    path: "/all",
+    path: "/wasabi-dataviz/all",
     name: "AllSongs",
     component: AllSongsPage,
   },
   {
-    path: "/artist/:artist",
+    path: "/wasabi-dataviz/artist/:artist",
     name: "Artist",
     component: ArtistPage,
   },
