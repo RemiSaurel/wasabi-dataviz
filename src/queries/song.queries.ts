@@ -1,6 +1,6 @@
 import { createQueryKeys } from "@lukemorales/query-key-factory";
 import { useQuery } from "@tanstack/vue-query";
-import { fetchAllSongs, fetchSongDocument } from "../services/song-service.ts";
+import { fetchAllSongs, fetchSongDocument } from "../services/song-service";
 import { Ref } from "vue";
 
 export const ALL_SONG_STEP = 200;

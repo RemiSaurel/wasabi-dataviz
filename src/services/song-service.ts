@@ -1,4 +1,4 @@
-import { API_URL } from "../utils/constants.ts";
+import { API_URL } from "../utils/constants";
 import { Ref } from "vue";
 
 export async function fetchAllSongs(start: Ref<number>): Promise<any> {
