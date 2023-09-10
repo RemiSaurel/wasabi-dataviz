@@ -44,6 +44,16 @@ const props = defineProps({
               :src="row[colName]['standard']"
             />
           </div>
+          <div v-else-if="colName === 'songs'">
+            <div v-for="(song, songIndex) in row[colName]" :key="songIndex">
+              <div>{{ song.title }}</div>
+              <div v-if="song.preview">
+                <audio controls>
+                  <source :src="song.preview" type="audio/mpeg" />
+                </audio>
+              </div>
+            </div>
+          </div>
           <div v-else>
             {{ row[colName] }}
           </div>

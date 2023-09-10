@@ -7,6 +7,7 @@ import Datatable from "../components/Datatable.vue";
 const albums = ref({
   cover: "Cover",
   title: "Title",
+  songs: "Chansons",
 });
 
 const members = ref({
@@ -25,7 +26,7 @@ const { data, isLoading, error } = useArtist(artistName);
 <template>
   <div v-if="isLoading">Loading...</div>
   <div class="flex flex-col gap-2" v-else-if="data">
-    <div class="text-2xl">{{ data.name }}</div>
+    <div class="text-3xl font-bold">{{ data.name }}</div>
 
     <div class="text-xl">Members</div>
     <Datatable :columns="members" :data="data.members" />
