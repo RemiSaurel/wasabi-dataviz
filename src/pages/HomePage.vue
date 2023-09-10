@@ -1,13 +1,29 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 
 const search = ref("");
 const router = useRouter();
-
-const searchArtist = (search: string) => {
-  router.push({ name: "Artist", params: { artist: search } });
+const searchResults = ref([]);
+const searchArtist = async (search: string) => {
+  // router.push({ name: "Artist", params: { artist: search } });
 };
+
+watch(search, async () => {
+  if (search.value.length < 2) {
+    searchResults.value = [];
+    return;
+  }
+  console.log(search.value);
+  const result = await fetch(
+    `https://wasabi.i3s.unice.fr/search/fulltext/${search.value}`,
+  );
+  searchResults.value = await result.json();
+});
+
+const filterResults = computed(() => {
+  return searchResults.value.slice(0, 5);
+});
 </script>
 
 <template>
@@ -26,6 +42,11 @@ const searchArtist = (search: string) => {
           placeholder="HJeuneCrack"
           required
         />
+        <div class="flex items-center gap-4" v-for="result in filterResults">
+          <img v-if="result.picture" :src="result.picture" />
+          <div v-else class="w-14 h-14 bg-gray-200"></div>
+          <div>{{ result.name }}</div>
+        </div>
       </div>
       <div>
         <button class="bg-blue-100 text-lg" @click="searchArtist(search)">
