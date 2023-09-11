@@ -10,3 +10,8 @@ export async function fetchAlbum(
   );
   return response.json();
 }
+
+export async function fetchGenre(genre: Ref<string>): Promise<any> {
+  const response = await fetch(`${API_URL}/search/genre/${genre.value}`);
+  return response.json();
+}
