@@ -6,52 +6,72 @@ const search = ref("");
 const router = useRouter();
 const searchResults = ref([]);
 const searchArtist = async (search: string) => {
-  // router.push({ name: "Artist", params: { artist: search } });
+  router.push({ name: "Artist", params: { artist: search } });
 };
 
 watch(search, async () => {
-  if (search.value.length < 2) {
+  if (search.value.length === 0) {
     searchResults.value = [];
     return;
   }
-  console.log(search.value);
   const result = await fetch(
     `https://wasabi.i3s.unice.fr/search/fulltext/${search.value}`,
   );
   searchResults.value = await result.json();
 });
-
-const filterResults = computed(() => {
-  return searchResults.value.slice(0, 5);
-});
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 items-center justify-center">
-    <div class="flex gap-2 justify-center">
-      <router-link class="text-blue-800" to="all">
-        <button>All Songs</button>
-      </router-link>
-    </div>
-    <div class="flex flex-col gap-2 w-80">
-      <div>
+  <div class="flex flex-col gap-4 justify-center">
+    <div class="flex flex-col items-center">
+      <div class="flex justify-center w-full">
         <input
           type="text"
           v-model="search"
-          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600"
-          placeholder="HJeuneCrack"
+          class="bg-gray-50 w-1/2 min-w-[200px] border border-gray-300 text-neutral-800 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
+          placeholder="Que souhaitez-vous découvrir ?"
           required
         />
-        <div class="flex items-center gap-4" v-for="result in filterResults">
-          <img v-if="result.picture" :src="result.picture" />
-          <div v-else class="w-14 h-14 bg-gray-200"></div>
-          <div>{{ result.name }}</div>
-        </div>
-      </div>
-      <div>
-        <button class="bg-blue-100 text-lg" @click="searchArtist(search)">
+        <button
+          class="bg-neutral-800 text-white text-lg hover:bg-neutral-900 rounded-lg px-4 py-2 transition-all"
+          @click="searchArtist(search)"
+        >
           Search
         </button>
+      </div>
+
+      <div
+        class="w-1/2 min-w-[300px] rounded-lg flex flex-col justify-center items-center bg-neutral-100 overflow-auto"
+      >
+        <router-link
+          class="flex items-center w-full gap-4 hover:bg-neutral-200 transition-all"
+          v-for="result in searchResults"
+          :to="{ name: 'Artist', params: { artist: result.name } }"
+        >
+          <img
+            v-if="result.picture"
+            :src="result.picture"
+            class="h-20 w-20"
+            alt=""
+          />
+          <div
+            v-else
+            class="h-20 w-20 bg-gray-200 text-4xl flex items-center justify-center"
+          >
+            ?
+          </div>
+          <div class="flex flex-col gap-2">
+            <div class="font-semibold">{{ result.name }}</div>
+            <div v-if="result.title">
+              <div class="text-sm text-gray-500">
+                Titre : {{ result.title }}
+              </div>
+              <div class="text-sm text-gray-500">
+                Album : {{ result.albumTitle }}
+              </div>
+            </div>
+          </div>
+        </router-link>
       </div>
     </div>
   </div>
