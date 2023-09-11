@@ -38,25 +38,7 @@ const props = defineProps({
           :key="colName"
           class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
         >
-          <div v-if="colName === 'cover'">
-            <img
-              v-if="row[colName] && row[colName]['standard']"
-              :src="row[colName]['standard']"
-            />
-          </div>
-          <div v-else-if="colName === 'songs'">
-            <div v-for="(song, songIndex) in row[colName]" :key="songIndex">
-              <div>{{ song.title }}</div>
-              <div v-if="song.preview">
-                <audio controls>
-                  <source :src="song.preview" type="audio/mpeg" />
-                </audio>
-              </div>
-            </div>
-          </div>
-          <div v-else>
-            {{ row[colName] }}
-          </div>
+          {{ row[colName] }}
         </td>
       </tr>
     </tbody>

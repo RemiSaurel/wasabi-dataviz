@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { onErrorCaptured } from "vue";
+import Navbar from "./components/Navbar.vue";
 
 const router = useRouter();
 onErrorCaptured((err, vm, info) => {
@@ -9,7 +10,13 @@ onErrorCaptured((err, vm, info) => {
 </script>
 
 <template>
-  <router-view></router-view>
+  <Navbar />
+  <router-view id="container"></router-view>
 </template>
 
-<style scoped></style>
+<style scoped>
+#container {
+  margin-right: 10rem;
+  margin-left: 10rem;
+}
+</style>
