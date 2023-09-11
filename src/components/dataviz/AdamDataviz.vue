@@ -1,5 +1,5 @@
 <script setup lang="ts"></script>
 
-<template>Dataviz rémi</template>
+<template>Dataviz Adam</template>
 
 <style scoped></style>
