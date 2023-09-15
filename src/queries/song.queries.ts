@@ -1,5 +1,5 @@
 import { createQueryKeys } from "@lukemorales/query-key-factory";
-import { useQuery } from "@tanstack/vue-query";
+import { useQueries, useQuery } from "@tanstack/vue-query";
 import { fetchAllSongs, fetchSongDocument } from "../services/song-service";
 import { Ref } from "vue";
 
@@ -22,4 +22,15 @@ export function useSongList(start: Ref<number>) {
 
 export function useSongDocument(id: Ref<string>) {
   return useQuery({ ...songs.songDocument(id) });
+}
+
+// CHECK IF THERE IS ANOTHER WAY TO GET SONG INFO
+export function useSongListOnAlbum(songIdList: Ref<Array<string>>) {
+  return useQueries({
+    queries: songIdList
+      ? songIdList.value.map((songId) => ({
+          ...songs.songDocument(songId),
+        }))
+      : [],
+  });
 }
