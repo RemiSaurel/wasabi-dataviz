@@ -1,12 +1,19 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
+import StatCard from "../components/home/StatCard.vue";
 
 const search = ref("");
 const router = useRouter();
 const searchResults = ref([]);
+const stats = ref({});
 const searchArtist = async (search: string) => {
   router.push({ name: "Artist", params: { artist: search } });
+};
+
+const getStats = async () => {
+  const result = await fetch(`https://wasabi.i3s.unice.fr/search/dbinfo`);
+  stats.value = await result.json();
 };
 
 watch(search, async () => {
@@ -19,10 +26,19 @@ watch(search, async () => {
   );
   searchResults.value = await result.json();
 });
+
+onMounted(() => {
+  getStats();
+});
 </script>
 
 <template>
   <div class="flex flex-col gap-4 justify-center">
+    <div class="flex gap-24 mb-8 justify-center text-center">
+      <StatCard title="Artists" :value="stats.nbArtist" />
+      <StatCard title="Albums" :value="stats.nbAlbum" />
+      <StatCard title="Songs" :value="stats.nbSong" />
+    </div>
     <div class="flex flex-col items-center">
       <div class="flex justify-center w-full">
         <input
@@ -39,7 +55,6 @@ watch(search, async () => {
           Search
         </button>
       </div>
-
       <div
         class="w-1/2 min-w-[300px] rounded-lg flex flex-col justify-center items-center bg-neutral-100 overflow-auto"
       >

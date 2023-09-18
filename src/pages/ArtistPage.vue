@@ -19,9 +19,15 @@ const { data, isLoading, error } = useArtist(artistName);
       <img class="h-60 w-60" :src="data.picture.big" />
       <div class="h-60 overflow-auto">{{ data.abstract }}</div>
     </div>
+    <div class="flex items-center">
+      <div class="text-xl font-bold">{{ data.deezerFans }} fans</div>
+    </div>
     <div class="flex items-center gap-2">
       <a :href="data.urlSpotify" target="_blank">
         <img class="h-10 w-10" src="../../public/spotify.svg" alt=""
+      /></a>
+      <a :href="data.urlDeezer" target="_blank">
+        <img class="h-10 w-10 mr-2" src="../../public/deezer.png" alt=""
       /></a>
       <a :href="data.urlYouTube" target="_blank">
         <img class="h-8 w-8" src="../../public/youtube.svg" alt=""
