@@ -65,8 +65,6 @@ const duration = computed(() => {
       <thead class="text-xs text-gray-700 uppercase bg-gray-50">
         <tr>
           <th scope="col" class="px-6 py-3">Titre</th>
-          <th scope="col" class="px-6 py-3">Rank</th>
-          <th scope="col" class="px-6 py-3">Durée</th>
         </tr>
       </thead>
       <tbody>
@@ -77,12 +75,6 @@ const duration = computed(() => {
         >
           <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
             {{ row["title"] }}
-          </td>
-          <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-            {{ row["rank"] }}
-          </td>
-          <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-            {{ row["duration"] }}
           </td>
         </tr>
       </tbody>
