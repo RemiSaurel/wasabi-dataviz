@@ -8,7 +8,7 @@ const router = useRouter();
 const searchResults = ref([]);
 const stats = ref({});
 const searchArtist = async (search: string) => {
-  router.push({ name: "Artist", params: { artist: search } });
+  await router.push({ name: "Artist", params: { artist: search } });
 };
 
 const getStats = async () => {

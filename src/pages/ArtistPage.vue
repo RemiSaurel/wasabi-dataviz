@@ -6,7 +6,7 @@ import AlbumCard from "../components/album/AlbumCard.vue";
 import GenreTag from "../components/artist/GenreTag.vue";
 
 const route = useRoute();
-const artistName = ref(route.params.artist);
+const artistName = ref(encodeURIComponent(route.params.artist as string));
 
 const { data, isLoading, error } = useArtist(artistName);
 </script>
