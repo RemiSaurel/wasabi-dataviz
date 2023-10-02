@@ -6,7 +6,7 @@ import MathieuDataviz from "../components/dataviz/MathieuDataviz.vue";
 import ChaimaeDataviz from "../components/dataviz/ChaimaeDataviz.vue";
 import AdamDataviz from "../components/dataviz/AdamDataviz.vue";
 
-const tab = ref("Adam");
+const tab = ref("Rémi");
 
 const changeTab = (tabName) => {
   tab.value = tabName;
