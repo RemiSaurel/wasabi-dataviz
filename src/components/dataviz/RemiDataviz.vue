@@ -87,7 +87,10 @@ const countryInfo = ref({});
 const filterArtist = ref("");
 
 onMounted(async () => {
-  const response = await fetch("/data/countries.json");
+  const response = await fetch(
+    import.meta.env.BASE_URL + "data/countries.json",
+  );
+
   data.value = await response.json();
 
   let totalNbSongs: number = 0;
