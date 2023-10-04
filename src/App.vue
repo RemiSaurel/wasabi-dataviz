@@ -16,7 +16,7 @@ onErrorCaptured((err, vm, info) => {
 
 <style scoped>
 #container {
-  margin-right: 10rem;
-  margin-left: 10rem;
+  margin-right: 6rem;
+  margin-left: 6rem;
 }
 </style>
