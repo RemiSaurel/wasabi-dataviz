@@ -22,6 +22,12 @@
           }}</span>
           <span class="text-4xl">fans cumulés</span>
         </div>
+        <div class="flex flex-col items-center">
+          <span class="text-4xl font-bold">{{
+            globalInfos.totalNbUniqueGenres
+          }}</span>
+          <span class="text-4xl">genres uniques</span>
+        </div>
       </div>
       <div v-else>
         <div class="flex justify-between items-baseline">
@@ -53,7 +59,7 @@
           <input
             type="text"
             class="border border-gray-300 rounded-md p-2"
-            placeholder="Nom de l'artiste..."
+            placeholder="Votre artiste..."
             v-model="filterArtist"
           />
           <div v-for="artist in filteredArtists">
@@ -87,23 +93,28 @@ onMounted(async () => {
   let totalNbSongs: number = 0;
   let totalNbAlbums: number = 0;
   let totalNbDeezerFans: number = 0;
+  let totalNbUniqueGenres: number = 0;
+  let uniqueGenres: Set<string> = new Set();
 
   data.value.forEach((country) => {
     country.artists.forEach((artist) => {
       totalNbAlbums += artist.nbAlbums || 0;
       totalNbSongs += artist.nbSongs || 0;
       totalNbDeezerFans += artist.deezerFans || 0;
+      uniqueGenres = new Set([...uniqueGenres, ...artist.genres]);
     });
   });
 
   totalNbSongs = formatNumber(totalNbSongs);
   totalNbAlbums = formatNumber(totalNbAlbums);
   totalNbDeezerFans = formatNumber(totalNbDeezerFans);
+  totalNbUniqueGenres = formatNumber(uniqueGenres.size);
 
   globalInfos.value = {
     totalNbSongs,
     totalNbAlbums,
     totalNbDeezerFans,
+    totalNbUniqueGenres,
   };
 
   const worldMap = d3.select("#worldMap");
@@ -130,7 +141,7 @@ onMounted(async () => {
   const tooltip = d3
     .select("body")
     .append("div")
-    .attr("class", "tooltip bg-purple-800 text-lg text-white p-2 rounded-md")
+    .attr("class", "tooltip bg-purple-800  text-lg text-white p-2 rounded-md")
     .style("position", "absolute")
     .style("z-index", "10")
     .style("visibility", "hidden");
