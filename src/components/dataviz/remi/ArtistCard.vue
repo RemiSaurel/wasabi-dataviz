@@ -20,6 +20,7 @@ const deezerFansFormatted = computed(() => {
 
 <template>
   <div
+    v-if="artist"
     class="flex flex-col w-full px-4 py-3 bg-neutral-100 rounded-lg hover:bg-neutral-200 hover:scale-105 transition-all"
   >
     <div class="font-bold flex flex-col gap-2 w-full">
@@ -31,7 +32,7 @@ const deezerFansFormatted = computed(() => {
       </div>
 
       <div
-        v-show="artist.genres.length > 0"
+        v-show="artist.genres && artist.genres.length > 0"
         class="flex gap-1 flex-wrap font-medium text-sm"
       >
         <div v-for="genre in artist.genres">
