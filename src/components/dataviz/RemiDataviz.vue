@@ -1,69 +1,131 @@
 <template>
   <div class="flex h-[500px]">
+    <!-- MAP -->
     <svg class="w-2/3" id="worldMap"></svg>
+
+    <!-- RIGHT SIDE DETAILS -->
     <div class="w-1/3 overflow-auto p-4">
+      <!-- GLOBAL INFOS ON START + NO COUNTRY SELECTED -->
       <div
         v-if="showGlobalStats && globalInfos"
         class="flex flex-col h-full justify-around items-center gap-8"
       >
-        <div class="flex flex-col items-center">
-          <span class="text-4xl font-bold">{{ globalInfos.totalNbSongs }}</span>
-          <span class="text-4xl">chansons</span>
-        </div>
-        <div class="flex flex-col items-center">
-          <span class="text-4xl font-bold">{{
-            globalInfos.totalNbAlbums
-          }}</span>
-          <span class="text-4xl">albums</span>
-        </div>
-        <div class="flex flex-col items-center">
-          <span class="text-4xl font-bold">{{
-            globalInfos.totalNbDeezerFans
-          }}</span>
-          <span class="text-4xl">fans cumulés</span>
-        </div>
-        <div class="flex flex-col items-center">
-          <span class="text-4xl font-bold">{{
-            globalInfos.totalNbUniqueGenres
-          }}</span>
-          <span class="text-4xl">genres uniques</span>
+        <div
+          v-for="(info, name) in globalInfos"
+          class="flex flex-col items-center"
+        >
+          <span class="text-4xl font-bold">{{ info }}</span>
+          <span class="text-xl">{{ name }}</span>
         </div>
       </div>
+
+      <!-- COUNTRY SELECTED -->
       <div v-else>
-        <div class="flex justify-between items-baseline">
-          <span class="text-2xl font-bold">{{ name }}</span>
-          <button
-            type="button"
-            @click="reset"
-            class="bg-white rounded-md p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset"
+        <div v-if="isLoading">
+          <div
+            class="flex flex-col h-[400px] justify-center items-center gap-8"
           >
-            <span class="sr-only">Close menu</span>
-            <svg
-              class="h-6 w-6"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
+            <div
+              class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-900"
+            ></div>
+            <span class="text-2xl font-bold">Chargement...</span>
+          </div>
         </div>
-        <div class="flex flex-col mt-2 gap-4">
-          <input
-            type="text"
-            class="border border-gray-300 rounded-md p-2"
-            placeholder="Votre artiste..."
-            v-model="filterArtist"
-          />
-          <div v-for="artist in filteredArtists">
-            <artist-card :artist="artist" />
+        <div v-else>
+          <div class="flex justify-between items-baseline">
+            <span class="text-2xl font-bold">{{ name }}</span>
+            <button
+              type="button"
+              @click="reset"
+              class="bg-white rounded-md p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset"
+            >
+              <span class="sr-only">Close menu</span>
+              <svg
+                class="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flex flex-col mt-2 gap-4">
+            <!-- SEARCHING ARTIST -->
+            <input
+              type="text"
+              class="border border-gray-300 rounded-md p-2"
+              placeholder="Votre artiste..."
+              v-model="filterArtist"
+            />
+
+            <!-- PAGINATION -->
+            <div class="flex justify-center mt-4">
+              <div v-if="totalPages > 1" class="flex justify-center mt-4">
+                <button
+                  @click="setCurrentPage(1)"
+                  :class="{
+                    'bg-blue-500 text-white': currentPage === 1,
+                    'bg-gray-300': currentPage !== 1,
+                  }"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                >
+                  Previous
+                </button>
+                <button
+                  @click="setCurrentPage(1)"
+                  :class="{
+                    'bg-blue-500 text-white': currentPage === 1,
+                    'bg-gray-300': currentPage !== 1,
+                  }"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                >
+                  1
+                </button>
+                <button
+                  :class="{
+                    'bg-blue-500 text-white': currentPage === getMiddlePage(0),
+                    'bg-gray-300': currentPage !== getMiddlePage(0),
+                  }"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                >
+                  {{ getMiddlePage(0) }}
+                </button>
+                <button
+                  @click="setCurrentPage(totalPages)"
+                  :class="{
+                    'bg-blue-500 text-white': currentPage === totalPages,
+                    'bg-gray-300': currentPage !== totalPages,
+                  }"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                >
+                  {{ totalPages }}
+                </button>
+                <button
+                  @click="setCurrentPage(1)"
+                  :class="{
+                    'bg-blue-500 text-white': currentPage === 1,
+                    'bg-gray-300': currentPage !== 1,
+                  }"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+
+            <!-- ARTIST CARDS -->
+            <div v-for="artist in paginatedArtists">
+              <artist-card :artist="artist" />
+            </div>
           </div>
         </div>
       </div>
@@ -72,13 +134,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import * as d3 from "d3";
 import { world } from "../../utils/world";
 import ArtistCard from "./remi/ArtistCard.vue";
 import { formatNumber } from "../../utils/functions";
 
 const data = ref(null);
+const isLoading = ref(true);
 const globalInfos = ref(null);
 const showGlobalStats = ref(true);
 const name = ref("");
@@ -86,21 +149,25 @@ const artists = ref([]);
 const countryInfo = ref({});
 const filterArtist = ref("");
 
+// Show loading spinner before data is loaded
+
 onMounted(async () => {
   const response = await fetch(
-    import.meta.env.BASE_URL + "data/countries.json",
+    import.meta.env.BASE_URL + "data/full_countries_clean.json",
   );
 
   data.value = await response.json();
 
   let totalNbSongs: number = 0;
   let totalNbAlbums: number = 0;
+  let totalNbArtists: number = 0;
   let totalNbDeezerFans: number = 0;
   let totalNbUniqueGenres: number = 0;
   let uniqueGenres: Set<string> = new Set();
 
   data.value.forEach((country) => {
     country.artists.forEach((artist) => {
+      totalNbArtists++;
       totalNbAlbums += artist.nbAlbums || 0;
       totalNbSongs += artist.nbSongs || 0;
       totalNbDeezerFans += artist.deezerFans || 0;
@@ -108,6 +175,9 @@ onMounted(async () => {
     });
   });
 
+  isLoading.value = false;
+
+  totalNbArtists = formatNumber(totalNbArtists);
   totalNbSongs = formatNumber(totalNbSongs);
   totalNbAlbums = formatNumber(totalNbAlbums);
   totalNbDeezerFans = formatNumber(totalNbDeezerFans);
@@ -115,6 +185,7 @@ onMounted(async () => {
 
   globalInfos.value = {
     totalNbSongs,
+    totalNbArtists,
     totalNbAlbums,
     totalNbDeezerFans,
     totalNbUniqueGenres,
@@ -209,8 +280,11 @@ const reset = () => {
   artists.value = [];
   showGlobalStats.value = true;
   name.value = "";
+  filterArtist.value = "";
+  currentPage.value = 1;
 };
 
+/* FILTERED ARTISTS
 const filteredArtists = computed(() => {
   if (filterArtist.value === "") {
     return artists.value;
@@ -221,6 +295,40 @@ const filteredArtists = computed(() => {
         .includes(filterArtist.value.toLowerCase());
     });
   }
+});
+*/
+
+const currentCountryArtists = computed(() => {
+  return countryInfo.value ? artists.value : [];
+});
+
+const currentPage = ref(1);
+const itemsPerPage = 50;
+
+const setCurrentPage = (page: number) => {
+  currentPage.value = page;
+};
+
+const totalPages = computed(() => {
+  return Math.ceil(currentCountryArtists.value.length / itemsPerPage);
+});
+
+const getMiddlePage = (section: number) => {
+  const middle = Math.ceil(totalPages.value / 2);
+  if (section === 1) {
+    return Math.min(currentPage.value + 1, middle);
+  } else if (section === 2) {
+    return Math.max(currentPage.value - 1, middle);
+  }
+
+  return middle;
+};
+
+const paginatedArtists = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+
+  return currentCountryArtists.value.slice(start, end);
 });
 </script>
 
