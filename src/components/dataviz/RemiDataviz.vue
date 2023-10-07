@@ -1,4 +1,13 @@
 <template>
+  <div
+    v-if="isLoading"
+    class="flex flex-col w-full m-auto h-[400px] justify-center items-center gap-8"
+  >
+    <div
+      class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-900"
+    ></div>
+    <span class="text-2xl font-bold">Chargement...</span>
+  </div>
   <div class="flex h-[500px]">
     <!-- MAP -->
     <svg class="w-2/3" id="worldMap"></svg>
@@ -21,17 +30,7 @@
 
       <!-- COUNTRY SELECTED -->
       <div v-else>
-        <div v-if="isLoading">
-          <div
-            class="flex flex-col h-[400px] justify-center items-center gap-8"
-          >
-            <div
-              class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-900"
-            ></div>
-            <span class="text-2xl font-bold">Chargement...</span>
-          </div>
-        </div>
-        <div v-else>
+        <div v-if="!isLoading">
           <div class="flex justify-between items-baseline">
             <span class="text-2xl font-bold">{{ name }}</span>
             <button
@@ -68,22 +67,20 @@
             />
 
             <!-- PAGINATION -->
-            <div class="flex justify-center mt-4">
-              <div v-if="totalPages > 1" class="flex justify-center mt-4">
+            <div class="flex justify-end">
+              <div v-if="totalPages > 1" class="flex">
                 <button
-                  @click="setCurrentPage(1)"
-                  :class="{
-                    'bg-blue-500 text-white': currentPage === 1,
-                    'bg-gray-300': currentPage !== 1,
-                  }"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                  @click="currentPage = currentPage - 1"
+                  :disabled="currentPage === 1"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
                 >
-                  Previous
+                  ⬅️
                 </button>
+
                 <button
                   @click="setCurrentPage(1)"
                   :class="{
-                    'bg-blue-500 text-white': currentPage === 1,
+                    'bg-purple-900 text-white': currentPage === 1,
                     'bg-gray-300': currentPage !== 1,
                   }"
                   class="px-3 py-2 rounded-md mx-1 cursor-pointer"
@@ -92,17 +89,24 @@
                 </button>
                 <button
                   :class="{
-                    'bg-blue-500 text-white': currentPage === getMiddlePage(0),
-                    'bg-gray-300': currentPage !== getMiddlePage(0),
+                    'bg-purple-900 text-white':
+                      currentPage !== 1 && currentPage !== totalPages,
+                    'bg-gray-300':
+                      currentPage === 1 || currentPage === totalPages,
                   }"
+                  @click="setCurrentPage(getMiddlePage(0))"
                   class="px-3 py-2 rounded-md mx-1 cursor-pointer"
                 >
-                  {{ getMiddlePage(0) }}
+                  {{
+                    currentPage !== 1 && currentPage !== totalPages
+                      ? currentPage
+                      : "..."
+                  }}
                 </button>
                 <button
                   @click="setCurrentPage(totalPages)"
                   :class="{
-                    'bg-blue-500 text-white': currentPage === totalPages,
+                    'bg-purple-900 text-white': currentPage === totalPages,
                     'bg-gray-300': currentPage !== totalPages,
                   }"
                   class="px-3 py-2 rounded-md mx-1 cursor-pointer"
@@ -110,14 +114,11 @@
                   {{ totalPages }}
                 </button>
                 <button
-                  @click="setCurrentPage(1)"
-                  :class="{
-                    'bg-blue-500 text-white': currentPage === 1,
-                    'bg-gray-300': currentPage !== 1,
-                  }"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                  :disabled="currentPage === totalPages"
+                  @click="currentPage = currentPage + 1"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
                 >
-                  Next
+                  ➡️
                 </button>
               </div>
             </div>
@@ -158,6 +159,8 @@ onMounted(async () => {
 
   data.value = await response.json();
 
+  isLoading.value = false;
+
   let totalNbSongs: number = 0;
   let totalNbAlbums: number = 0;
   let totalNbArtists: number = 0;
@@ -175,8 +178,6 @@ onMounted(async () => {
     });
   });
 
-  isLoading.value = false;
-
   totalNbArtists = formatNumber(totalNbArtists);
   totalNbSongs = formatNumber(totalNbSongs);
   totalNbAlbums = formatNumber(totalNbAlbums);
@@ -184,11 +185,11 @@ onMounted(async () => {
   totalNbUniqueGenres = formatNumber(uniqueGenres.size);
 
   globalInfos.value = {
-    totalNbSongs,
-    totalNbArtists,
-    totalNbAlbums,
-    totalNbDeezerFans,
-    totalNbUniqueGenres,
+    chansons: totalNbSongs,
+    artistes: totalNbArtists,
+    albums: totalNbAlbums,
+    "fans cumulés": totalNbDeezerFans,
+    "genres uniques": totalNbUniqueGenres,
   };
 
   const worldMap = d3.select("#worldMap");
@@ -252,11 +253,38 @@ onMounted(async () => {
     .on("mouseenter", function (event, d) {
       // Show the tooltip next to the cursor
       const cursor = d3.pointer(event, window);
+
+      const countryTootltipInfo = {
+        name: d.properties.name,
+        nbArtists: data.value.find((country) => {
+          return country.country === d.properties.name;
+        })?.artists.length,
+        nbAlbums: data.value
+          .find((country) => {
+            return country.country === d.properties.name;
+          })
+          ?.artists.reduce((acc, artist) => {
+            return acc + artist.nbAlbums;
+          }, 0),
+      };
+
       tooltip
         .style("visibility", "visible")
         .style("left", cursor[0] + 10 + "px")
-        .style("top", cursor[1] + 10 + "px")
-        .text(d.properties.name);
+        .style("top", cursor[1] + 10 + "px");
+
+      if (!countryTootltipInfo.nbArtists || !countryTootltipInfo.nbAlbums) {
+        countryTootltipInfo.nbArtists = 0;
+        countryTootltipInfo.nbAlbums = 0;
+      }
+      tooltip.html(`
+        <div class="flex flex-col p-1 gap-1">
+          <span class="text-xl font-bold">${countryTootltipInfo.name}</span>
+          <span class="w-full h-[2px] bg-white"></span>
+          <span class="text-lg">${countryTootltipInfo.nbArtists} artiste(s)</span>
+          <span class="text-lg">${countryTootltipInfo.nbAlbums} album(s)</span>
+        </div>
+      `);
 
       d3.select(this).attr("fill", "#c79ffb");
       // Cursor becomes a pointer
@@ -331,5 +359,3 @@ const paginatedArtists = computed(() => {
   return currentCountryArtists.value.slice(start, end);
 });
 </script>
-
-<style scoped></style>
