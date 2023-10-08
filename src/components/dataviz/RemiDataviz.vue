@@ -165,36 +165,8 @@ onMounted(async () => {
 
   isLoading.value = false;
 
-  let totalNbSongs: number = 0;
-  let totalNbAlbums: number = 0;
-  let totalNbArtists: number = 0;
-  let totalNbDeezerFans: number = 0;
-  let totalNbUniqueGenres: number = 0;
-  let uniqueGenres: Set<string> = new Set();
-
-  data.value.forEach((country) => {
-    country.artists.forEach((artist) => {
-      totalNbArtists++;
-      totalNbAlbums += artist.nbAlbums || 0;
-      totalNbSongs += artist.nbSongs || 0;
-      totalNbDeezerFans += artist.deezerFans || 0;
-      uniqueGenres = new Set([...uniqueGenres, ...artist.genres]);
-    });
-  });
-
-  totalNbArtists = formatNumber(totalNbArtists);
-  totalNbSongs = formatNumber(totalNbSongs);
-  totalNbAlbums = formatNumber(totalNbAlbums);
-  totalNbDeezerFans = formatNumber(totalNbDeezerFans);
-  totalNbUniqueGenres = formatNumber(uniqueGenres.size);
-
-  globalInfos.value = {
-    chansons: totalNbSongs,
-    artistes: totalNbArtists,
-    albums: totalNbAlbums,
-    "fans cumulés": totalNbDeezerFans,
-    "genres uniques": totalNbUniqueGenres,
-  };
+  // SETUP GLOBAL DATA STATS
+  setupGlobalDataStats();
 
   const worldMap = d3.select("#worldMap");
   const width = 1000;
@@ -253,50 +225,32 @@ onMounted(async () => {
       artists.value = countryInfo.value.artists.sort((a, b) => {
         return b.deezerFans - a.deezerFans;
       });
+
+      // Country on the map should be pinging
+      d3.select(this).attr("fill", "#591baa");
     })
     .on("mouseenter", function (event, d) {
-      // Show the tooltip next to the cursor
-      const cursor = d3.pointer(event, window);
+      setupTooltip(tooltip, event, d);
 
-      const countryTootltipInfo = {
-        name: d.properties.name,
-        nbArtists: data.value.find((country) => {
-          return country.country === d.properties.name;
-        })?.artists.length,
-        nbAlbums: data.value
-          .find((country) => {
-            return country.country === d.properties.name;
-          })
-          ?.artists.reduce((acc, artist) => {
-            return acc + artist.nbAlbums;
-          }, 0),
-      };
-
-      tooltip
-        .style("visibility", "visible")
-        .style("left", cursor[0] + 10 + "px")
-        .style("top", cursor[1] + 10 + "px");
-
-      if (!countryTootltipInfo.nbArtists || !countryTootltipInfo.nbAlbums) {
-        countryTootltipInfo.nbArtists = 0;
-        countryTootltipInfo.nbAlbums = 0;
+      // If country is selected, don't change color
+      if (name.value === d.properties.name) {
+        return;
       }
-      tooltip.html(`
-        <div class="flex flex-col p-1 gap-1">
-          <span class="text-xl font-bold">${countryTootltipInfo.name}</span>
-          <span class="w-full h-[2px] bg-white"></span>
-          <span class="text-lg">${countryTootltipInfo.nbArtists} artiste(s)</span>
-          <span class="text-lg">${countryTootltipInfo.nbAlbums} album(s)</span>
-        </div>
-      `);
 
       d3.select(this).attr("fill", "#c79ffb");
+
       // Cursor becomes a pointer
       d3.select(this).attr("cursor", "pointer");
     })
     .on("mouseleave", function (event, d) {
       // Hide and clear the tooltip
       tooltip.style("visibility", "hidden");
+
+      // If country is selected, don't change color
+      if (name.value === d.properties.name) {
+        return;
+      }
+
       d3.select(this).attr("fill", "#e0dbe9");
     });
 
@@ -305,6 +259,79 @@ onMounted(async () => {
     mapContainer.attr("transform", event.transform);
   }
 });
+
+const setupGlobalDataStats = () => {
+  let totalNbSongs: number = 0;
+  let totalNbAlbums: number = 0;
+  let totalNbArtists: number = 0;
+  let totalNbDeezerFans: number = 0;
+  let totalNbUniqueGenres: number = 0;
+  let uniqueGenres: Set<string> = new Set();
+
+  data.value.forEach((country) => {
+    country.artists.forEach((artist) => {
+      totalNbArtists++;
+      totalNbAlbums += artist.nbAlbums || 0;
+      totalNbSongs += artist.nbSongs || 0;
+      totalNbDeezerFans += artist.deezerFans || 0;
+      uniqueGenres = new Set([...uniqueGenres, ...artist.genres]);
+    });
+  });
+
+  totalNbArtists = formatNumber(totalNbArtists);
+  totalNbSongs = formatNumber(totalNbSongs);
+  totalNbAlbums = formatNumber(totalNbAlbums);
+  totalNbDeezerFans = formatNumber(totalNbDeezerFans);
+  totalNbUniqueGenres = formatNumber(uniqueGenres.size);
+
+  globalInfos.value = {
+    chansons: totalNbSongs,
+    artistes: totalNbArtists,
+    albums: totalNbAlbums,
+    "fans cumulés": totalNbDeezerFans,
+    "genres uniques": totalNbUniqueGenres,
+  };
+};
+
+const setupTooltip = (tooltip, event, d) => {
+  // Show the tooltip next to the cursor
+  const cursor = d3.pointer(event, window);
+
+  const countryTootltipInfo = {
+    name: d.properties.name,
+    nbArtists: data.value.find((country) => {
+      return country.country === d.properties.name;
+    })?.artists.length,
+    nbAlbums: data.value
+      .find((country) => {
+        return country.country === d.properties.name;
+      })
+      ?.artists.reduce((acc, artist) => {
+        return acc + artist.nbAlbums;
+      }, 0),
+  };
+
+  tooltip
+    .style("visibility", "visible")
+    .style("left", cursor[0] + 10 + "px")
+    .style("top", cursor[1] + 10 + "px");
+
+  // Format for country with no artists or albums
+  if (!countryTootltipInfo.nbArtists || !countryTootltipInfo.nbAlbums) {
+    countryTootltipInfo.nbArtists = 0;
+    countryTootltipInfo.nbAlbums = 0;
+  }
+
+  // Display tooltip
+  tooltip.html(`
+        <div class="flex flex-col p-1 gap-1">
+          <span class="text-xl font-bold">${countryTootltipInfo.name}</span>
+          <span class="w-full h-[2px] bg-white"></span>
+          <span class="text-lg">${countryTootltipInfo.nbArtists} artiste(s)</span>
+          <span class="text-lg">${countryTootltipInfo.nbAlbums} album(s)</span>
+        </div>
+      `);
+};
 
 const reset = () => {
   d3.selectAll("path").attr("fill", "#e0dbe9");
