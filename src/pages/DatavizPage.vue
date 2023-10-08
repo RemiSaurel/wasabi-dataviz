@@ -15,20 +15,12 @@ const changeTab = (tabName) => {
 
 <template>
   <div>
-    <NavbarDataviz @tab="changeTab" :tab="tab" />
+    <NavbarDataviz id="tabs" @tab="changeTab" :tab="tab" />
 
-    <div v-if="tab === 'Adam'">
-      <AdamDataviz />
-    </div>
-    <div v-else-if="tab === 'Chaimae'">
-      <ChaimaeDataviz />
-    </div>
-    <div v-else-if="tab === 'Mathieu'">
-      <MathieuDataviz />
-    </div>
-    <div v-else-if="tab === 'Rémi'">
-      <RemiDataviz />
-    </div>
+    <AdamDataviz v-if="tab === 'Adam'" />
+    <ChaimaeDataviz v-else-if="tab === 'Chaimae'" />
+    <MathieuDataviz v-else-if="tab === 'Mathieu'" />
+    <RemiDataviz v-else-if="tab === 'Rémi'" />
   </div>
 </template>
 

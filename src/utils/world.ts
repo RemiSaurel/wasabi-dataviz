@@ -12485,7 +12485,7 @@ export const world = {
     {
       type: "Feature",
       properties: {
-        name: "USA",
+        name: "United States",
       },
       geometry: {
         type: "MultiPolygon",

@@ -16,6 +16,7 @@ onErrorCaptured((err, vm, info) => {
 
 <style scoped>
 #container {
+  height: calc(100vh - 82px); /* 82px = height of navbar */
   margin-right: 6rem;
   margin-left: 6rem;
 }
