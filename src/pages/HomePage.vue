@@ -33,7 +33,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-4 justify-center">
+  <div class="flex flex-col gap-4">
     <div class="flex gap-24 mb-8 justify-center text-center">
       <StatCard title="Artists" :value="stats.nbArtist" />
       <StatCard title="Albums" :value="stats.nbAlbum" />
