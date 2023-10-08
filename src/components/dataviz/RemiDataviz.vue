@@ -1,23 +1,20 @@
 <template>
   <div
     v-if="isLoading"
-    class="flex flex-col w-full m-auto h-[400px] justify-center items-center gap-8"
+    class="flex flex-col w-full h-full m-auto justify-center items-center gap-8"
   >
     <div
       class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-900"
     ></div>
     <span class="text-2xl font-bold">Chargement...</span>
   </div>
-  <div class="flex h-[500px]">
-    <!-- MAP -->
-    <svg class="w-2/3" id="worldMap"></svg>
-
-    <!-- RIGHT SIDE DETAILS -->
-    <div class="w-1/3 overflow-auto p-4">
+  <div class="flex h-full">
+    <!-- LEFT SIDE DETAILS -->
+    <div class="w-1/2 overflow-auto p-4">
       <!-- GLOBAL INFOS ON START + NO COUNTRY SELECTED -->
       <div
         v-if="showGlobalStats && globalInfos"
-        class="flex flex-col h-full justify-around items-center gap-8"
+        class="grid grid-cols-1 lg:grid-cols-2 content-center place-self-center h-full gap-8"
       >
         <div
           v-for="(info, name) in globalInfos"
@@ -124,13 +121,22 @@
             </div>
 
             <!-- ARTIST CARDS -->
-            <div v-for="artist in paginatedArtists">
-              <artist-card :artist="artist" />
+            <div class="grid grid-cols-1 gap-x-4 gap-y-6 h-full xl:grid-cols-2">
+              <div v-for="artist in paginatedArtists">
+                <artist-card :artist="artist" />
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- MAP -->
+    <svg
+      class="w-1/2"
+      :class="isLoading ? '' : 'bg-blue-50'"
+      id="worldMap"
+    ></svg>
   </div>
 </template>
 
@@ -149,8 +155,6 @@ const name = ref("");
 const artists = ref([]);
 const countryInfo = ref({});
 const filterArtist = ref("");
-
-// Show loading spinner before data is loaded
 
 onMounted(async () => {
   const response = await fetch(
@@ -198,7 +202,7 @@ onMounted(async () => {
 
   const projection = d3
     .geoMercator()
-    .scale(200) // Adjust the initial scale as needed
+    .scale(120) // Adjust the initial scale as needed
     .translate([width / 3, height / 1.5]);
 
   const path = d3.geoPath().projection(projection);
