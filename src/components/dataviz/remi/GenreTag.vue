@@ -8,9 +8,7 @@ defineProps({
 </script>
 
 <template>
-  <div
-    class="bg-neutral-800 text-xs text-white rounded-full px-2 py-1 select-none"
-  >
+  <div class="bg-neutral-800 text-xs text-white rounded-full px-2 py-1">
     {{ genre }}
   </div>
 </template>

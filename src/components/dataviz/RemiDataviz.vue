@@ -56,7 +56,7 @@
               </button>
             </div>
 
-            <div class="flex flex-col mt-2 gap-4">
+            <div class="flex flex-col mt-2 gap-2">
               <!-- SEARCHING ARTIST -->
               <div class="flex items-center gap-2">
                 <input
@@ -64,6 +64,7 @@
                   class="border border-gray-300 rounded-md p-2 w-4/5"
                   placeholder="Nom d'artiste, genres, ..."
                   v-model="filterArtistName"
+                  @keyup.enter="filterAndPaginateArtists"
                 />
                 <div class="flex-grow flex gap-2">
                   <button
@@ -84,8 +85,37 @@
                 </div>
               </div>
 
+              <div class="flex justify-between">
+                <!-- FILTERS AND NB RESULTS -->
+                <div class="italic text-gray-700 text-sm">
+                  Recherche :
+                  <span v-if="filterArtistName">
+                    '{{ filterArtistName }}'
+                  </span>
+                  <span v-else>aucun filtre</span>
+                  <br />
+                  {{ artists.length }} résultat(s)
+                </div>
+              </div>
+
+              <!-- ARTIST CARDS -->
+              <div
+                class="grid grid-cols-1 gap-x-4 gap-y-6 h-full xl:grid-cols-2"
+                v-if="displayedArtists.length > 0"
+              >
+                <ArtistCard
+                  v-for="artist in displayedArtists"
+                  :artist="artist"
+                  :key="artist.artist"
+                />
+              </div>
+              <div v-else>
+                <span class="text-xl text-neutral-800">
+                  😔 Nous n'avons trouvé aucun résultat pour votre recherche...
+                </span>
+              </div>
               <!-- PAGINATION -->
-              <div class="flex justify-end" v-if="totalPages > 1">
+              <div class="flex justify-end mt-2" v-if="totalPages > 1">
                 <div class="flex">
                   <button
                     @click="currentPage = currentPage - 1"
@@ -105,6 +135,7 @@
                     1
                   </button>
                   <button
+                    v-if="totalPages > 3"
                     :class="{
                       'bg-purple-900 text-white':
                         currentPage !== 1 && currentPage !== totalPages,
@@ -139,21 +170,6 @@
                   </button>
                 </div>
               </div>
-
-              <!-- ARTIST CARDS -->
-              <div
-                class="grid grid-cols-1 gap-x-4 gap-y-6 h-full xl:grid-cols-2"
-                v-if="displayedArtists.length > 0"
-              >
-                <div v-for="artist in displayedArtists">
-                  <artist-card :artist="artist" />
-                </div>
-              </div>
-              <div v-else>
-                <span class="text-xl text-neutral-800">
-                  😔 Nous n'avons trouvé aucun résultat pour votre recherche...
-                </span>
-              </div>
             </div>
           </div>
         </div>
@@ -175,6 +191,7 @@ import * as d3 from "d3";
 import { world } from "../../utils/world";
 import ArtistCard from "./remi/ArtistCard.vue";
 import { formatNumber } from "../../utils/functions";
+import { RecycleScroller } from "vue-virtual-scroller";
 
 const data = ref(null);
 const isLoading = ref(true);
@@ -331,28 +348,35 @@ const setupTooltip = (tooltip, event, d) => {
 
   const countryTootltipInfo = {
     name: d.properties.name,
-    nbArtists: data.value.find((country) => {
-      return country.country === d.properties.name;
-    })?.artists.length,
-    nbAlbums: data.value
-      .find((country) => {
+    nbArtists: formatNumber(
+      data.value.find((country) => {
         return country.country === d.properties.name;
-      })
-      ?.artists.reduce((acc, artist) => {
-        return acc + artist.nbAlbums;
-      }, 0),
+      })?.artists.length,
+    ),
+    nbAlbums: formatNumber(
+      data.value
+        .find((country) => {
+          return country.country === d.properties.name;
+        })
+        ?.artists.reduce((acc, artist) => {
+          return acc + artist.nbAlbums;
+        }, 0),
+    ),
+    nbSongs: formatNumber(
+      data.value
+        .find((country) => {
+          return country.country === d.properties.name;
+        })
+        ?.artists.reduce((acc, artist) => {
+          return acc + artist.nbSongs;
+        }, 0),
+    ),
   };
 
   tooltip
     .style("visibility", "visible")
     .style("left", cursor[0] + 10 + "px")
     .style("top", cursor[1] + 10 + "px");
-
-  // Format for country with no artists or albums
-  if (!countryTootltipInfo.nbArtists || !countryTootltipInfo.nbAlbums) {
-    countryTootltipInfo.nbArtists = 0;
-    countryTootltipInfo.nbAlbums = 0;
-  }
 
   // Display tooltip
   tooltip.html(`
@@ -361,6 +385,7 @@ const setupTooltip = (tooltip, event, d) => {
           <span class="w-full h-[2px] bg-white"></span>
           <span class="text-lg">${countryTootltipInfo.nbArtists} artiste(s)</span>
           <span class="text-lg">${countryTootltipInfo.nbAlbums} album(s)</span>
+          <span class="text-lg">${countryTootltipInfo.nbSongs} chanson(s)</span>
         </div>
       `);
 };
@@ -369,6 +394,7 @@ const resetAll = () => {
   d3.selectAll("path").attr("fill", "#e0dbe9");
   countryInfo.value = {};
   artists.value = [];
+  displayedArtists.value = [];
   showGlobalStats.value = true;
   name.value = "";
   filterArtistName = "";
@@ -422,7 +448,7 @@ const filterAndPaginateArtists = () => {
 };
 
 const currentPage = ref(1);
-const itemsPerPage = 50;
+const itemsPerPage = 20;
 
 watch([currentPage], () => {
   filterAndPaginateArtists();
@@ -440,15 +466,3 @@ const getMiddlePage = () => {
   return Math.ceil(totalPages.value / 2);
 };
 </script>
-
-<style>
-.v-enter-active,
-.v-leave-active {
-  transition: opacity 0.5s ease;
-}
-
-.v-enter-from,
-.v-leave-to {
-  opacity: 0;
-}
-</style>
