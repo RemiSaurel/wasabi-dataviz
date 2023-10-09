@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref } from "vue";
+
 defineProps({
   genre: {
     type: String,
@@ -9,12 +11,18 @@ defineProps({
     default: false,
   },
 });
+
+const closableIsHovered = ref(false);
 </script>
 
 <template>
+  <!-- When closable is hovered, the whole button becomes red -->
   <button
-    class="bg-neutral-800 text-xs leading-3 text-white rounded-full px-2 py-1 cursor-pointer"
-    :class="closable ? 'flex gap-1 items-center pr-1' : ''"
+    class="transition-all text-xs leading-3 text-white rounded-full px-2 py-1 cursor-pointer"
+    :class="[
+      closable ? 'flex gap-1 items-center pr-1' : '',
+      closableIsHovered ? ' bg-red-700' : ' bg-neutral-700',
+    ]"
     @click="$emit('filter', genre)"
   >
     <span class="">
@@ -22,8 +30,10 @@ defineProps({
     </span>
     <button
       v-if="closable"
-      class="mx-1 p-0"
+      class="mx-1 p-0 transition-all rounded-full"
       @click="$emit('removeGenre', genre)"
+      @mouseover="closableIsHovered = true"
+      @mouseleave="closableIsHovered = false"
     >
       <svg
         class="w-3 h-3 text-white fill-current"

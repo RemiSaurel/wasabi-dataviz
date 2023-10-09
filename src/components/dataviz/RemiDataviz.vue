@@ -85,9 +85,12 @@
                 </div>
               </div>
 
-              <div class="flex flex-col justify-between">
+              <div class="flex flex-col gap-1 justify-between">
                 <!-- FILTERS AND NB RESULTS -->
-                <div class="flex gap-1 flex-wrap">
+                <div
+                  v-if="genresFilter.length > 0"
+                  class="flex gap-1 flex-wrap"
+                >
                   <div class="flex gap-1" v-for="genre in genresFilter">
                     <GenreTag
                       :genre="genre"
