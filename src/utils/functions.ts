@@ -1,4 +1,6 @@
 export const formatNumber = (number: number) => {
+  if (number === undefined) return 0;
+  if (number === 0) return 0;
   if (number < 1000) {
     return number;
   } else if (number < 1000000) {
