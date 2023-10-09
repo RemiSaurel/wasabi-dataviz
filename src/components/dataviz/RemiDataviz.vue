@@ -62,7 +62,7 @@
                 <input
                   type="text"
                   class="border border-gray-300 rounded-md p-2 w-4/5"
-                  placeholder="Nom d'artiste, genres, ..."
+                  placeholder="Nom d'artiste..."
                   v-model="filterArtistName"
                   @keyup.enter="filterAndPaginateArtists"
                 />
@@ -85,12 +85,28 @@
                 </div>
               </div>
 
-              <div class="flex justify-between">
+              <div class="flex flex-col justify-between">
                 <!-- FILTERS AND NB RESULTS -->
+                <div class="flex gap-1 flex-wrap">
+                  <div class="flex gap-1" v-for="genre in genresFilter">
+                    <GenreTag
+                      :genre="genre"
+                      :closable="true"
+                      @removeGenre="removeGenre(genre)"
+                    />
+                  </div>
+                </div>
+
                 <div class="italic text-gray-700 text-sm">
                   Recherche :
                   <span v-if="filterArtistName">
                     '{{ filterArtistName }}'
+                  </span>
+                  <span v-if="filterArtistName && genresFilter.length > 0">
+                    avec
+                  </span>
+                  <span v-if="genresFilter.length > 0">
+                    {{ genresFilter.join(", ") }}
                   </span>
                   <span v-else>aucun filtre</span>
                   <br />
@@ -104,6 +120,7 @@
                 v-if="displayedArtists.length > 0"
               >
                 <ArtistCard
+                  @filter="addGenreFilter($event)"
                   v-for="artist in displayedArtists"
                   :artist="artist"
                   :key="artist.artist"
@@ -186,12 +203,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, Ref, ref, watch } from "vue";
 import * as d3 from "d3";
 import { world } from "../../utils/world";
 import ArtistCard from "./remi/ArtistCard.vue";
 import { formatNumber } from "../../utils/functions";
-import { RecycleScroller } from "vue-virtual-scroller";
+import GenreTag from "./remi/GenreTag.vue";
 
 const data = ref(null);
 const isLoading = ref(true);
@@ -200,6 +217,7 @@ const showGlobalStats = ref(true);
 const name = ref("");
 const artists = ref([]);
 const countryInfo = ref({});
+const genresFilter: Ref<string[]> = ref([]);
 let filterArtistName = ""; // Not a ref because we don't want to trigger a re-render
 
 onMounted(async () => {
@@ -403,6 +421,24 @@ const resetAll = () => {
 
 const resetFilters = () => {
   filterArtistName = "";
+  genresFilter.value = [];
+  currentPage.value = 1;
+  filterAndPaginateArtists();
+};
+
+const addGenreFilter = (genre: string) => {
+  // If genre already in filter, do not add it
+  if (genresFilter.value.includes(genre)) {
+    return;
+  } else {
+    genresFilter.value = [...genresFilter.value, genre];
+  }
+  currentPage.value = 1;
+  filterAndPaginateArtists();
+};
+
+const removeGenre = (genre: string) => {
+  genresFilter.value = genresFilter.value.filter((g) => g !== genre);
   currentPage.value = 1;
   filterAndPaginateArtists();
 };
@@ -422,10 +458,12 @@ const filterAndPaginateArtists = () => {
       // Check if the artist's name contains the search term
       const nameMatch = artistName.includes(searchName);
 
-      // Check if any of the artist's genres contain the search term
-      const genreMatch = genres.some((genre) => genre.includes(searchName));
+      // Check if the artist's genres is in the genres filter
+      const genresMatch = genresFilter.value.every((genre) =>
+        genres.includes(genre.toLowerCase()),
+      );
 
-      return nameMatch || genreMatch;
+      return nameMatch && genresMatch;
     })
     .sort((a, b) => {
       return b.deezerFans - a.deezerFans;
