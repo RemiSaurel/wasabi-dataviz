@@ -455,7 +455,7 @@ const filterAndPaginateArtists = () => {
   artists.value = countryInfo.value.artists
     .filter((artist) => {
       const artistName = artist.artist.toLowerCase();
-      const searchName = filterArtistName.toLowerCase();
+      const searchName = filterArtistName.toLowerCase().trim();
       const genres = artist.genres.map((genre) => genre.toLowerCase());
 
       // Check if the artist's name contains the search term
