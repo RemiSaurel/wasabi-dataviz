@@ -28,102 +28,167 @@
       <!-- COUNTRY SELECTED -->
       <div v-else>
         <div v-if="!isLoading">
-          <div class="flex justify-between items-baseline">
-            <span class="text-2xl font-bold">{{ name }}</span>
-            <button
-              type="button"
-              @click="reset"
-              class="bg-white rounded-md p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset"
-            >
-              <span class="sr-only">Close menu</span>
-              <svg
-                class="h-6 w-6"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
+          <div>
+            <div class="flex justify-between items-baseline">
+              <span class="text-2xl font-bold">{{ name }}</span>
+
+              <button
+                type="button"
+                @click="resetAll"
+                class="bg-white rounded-md p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset"
               >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <div class="flex flex-col mt-2 gap-4">
-            <!-- SEARCHING ARTIST -->
-            <input
-              type="text"
-              class="border border-gray-300 rounded-md p-2"
-              placeholder="Votre artiste..."
-              v-model="filterArtist"
-            />
-
-            <!-- PAGINATION -->
-            <div class="flex justify-end">
-              <div v-if="totalPages > 1" class="flex">
-                <button
-                  @click="currentPage = currentPage - 1"
-                  :disabled="currentPage === 1"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
+                <span class="sr-only">Close menu</span>
+                <svg
+                  class="h-6 w-6"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  aria-hidden="true"
                 >
-                  ⬅️
-                </button>
-
-                <button
-                  @click="setCurrentPage(1)"
-                  :class="{
-                    'bg-purple-900 text-white': currentPage === 1,
-                    'bg-gray-300': currentPage !== 1,
-                  }"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
-                >
-                  1
-                </button>
-                <button
-                  :class="{
-                    'bg-purple-900 text-white':
-                      currentPage !== 1 && currentPage !== totalPages,
-                    'bg-gray-300':
-                      currentPage === 1 || currentPage === totalPages,
-                  }"
-                  @click="setCurrentPage(getMiddlePage(0))"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
-                >
-                  {{
-                    currentPage !== 1 && currentPage !== totalPages
-                      ? currentPage
-                      : "..."
-                  }}
-                </button>
-                <button
-                  @click="setCurrentPage(totalPages)"
-                  :class="{
-                    'bg-purple-900 text-white': currentPage === totalPages,
-                    'bg-gray-300': currentPage !== totalPages,
-                  }"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
-                >
-                  {{ totalPages }}
-                </button>
-                <button
-                  :disabled="currentPage === totalPages"
-                  @click="currentPage = currentPage + 1"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
-                >
-                  ➡️
-                </button>
-              </div>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
             </div>
 
-            <!-- ARTIST CARDS -->
-            <div class="grid grid-cols-1 gap-x-4 gap-y-6 h-full xl:grid-cols-2">
-              <div v-for="artist in paginatedArtists">
-                <artist-card :artist="artist" />
+            <div class="flex flex-col mt-2 gap-2">
+              <!-- SEARCHING ARTIST -->
+              <div class="flex items-center gap-2">
+                <input
+                  type="text"
+                  class="border border-gray-300 rounded-md p-2 w-4/5"
+                  placeholder="Nom d'artiste..."
+                  v-model="filterArtistName"
+                  @keyup.enter="filterAndPaginateArtists"
+                />
+                <div class="flex-grow flex gap-2">
+                  <button
+                    class="flex-grow-0 bg-purple-800 text-white rounded-md p-2 hover:bg-purple-900 transition-all"
+                    @click="filterAndPaginateArtists"
+                  >
+                    <img src="../../../public/search.svg" alt="search" />
+                  </button>
+                  <button
+                    class="flex-grow-0 bg-red-700 text-white rounded-md p-2 hover:bg-red-800 transition-all"
+                    @click="resetFilters"
+                  >
+                    <img
+                      src="../../../public/bin.svg"
+                      alt="reset artist name"
+                    />
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-1 justify-between">
+                <!-- FILTERS AND NB RESULTS -->
+                <div
+                  v-if="genresFilter.length > 0"
+                  class="flex gap-1 flex-wrap"
+                >
+                  <div class="flex gap-1" v-for="genre in genresFilter">
+                    <GenreTag
+                      :genre="genre"
+                      :closable="true"
+                      @removeGenre="removeGenre(genre)"
+                    />
+                  </div>
+                </div>
+
+                <div class="italic text-gray-700 text-sm">
+                  Recherche :
+                  <span v-if="filterArtistName">
+                    '{{ filterArtistName }}'
+                  </span>
+                  <span v-if="filterArtistName && genresFilter.length > 0">
+                    avec
+                  </span>
+                  <span v-if="genresFilter.length > 0">
+                    {{ genresFilter.join(", ") }}
+                  </span>
+                  <span v-else>aucun filtre</span>
+                  <br />
+                  {{ artists.length }} résultat(s)
+                </div>
+              </div>
+
+              <!-- ARTIST CARDS -->
+              <div
+                class="grid grid-cols-1 gap-x-4 gap-y-6 h-full xl:grid-cols-2"
+                v-if="displayedArtists.length > 0"
+              >
+                <ArtistCard
+                  @filter="addGenreFilter($event)"
+                  v-for="artist in displayedArtists"
+                  :artist="artist"
+                  :key="artist.artist"
+                />
+              </div>
+              <div v-else>
+                <span class="text-xl text-neutral-800">
+                  😔 Nous n'avons trouvé aucun résultat pour votre recherche...
+                </span>
+              </div>
+              <!-- PAGINATION -->
+              <div class="flex justify-end mt-2" v-if="totalPages > 1">
+                <div class="flex">
+                  <button
+                    @click="currentPage = currentPage - 1"
+                    :disabled="currentPage === 1"
+                    class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
+                  >
+                    ⬅️
+                  </button>
+                  <button
+                    @click="setCurrentPage(1)"
+                    :class="{
+                      'bg-purple-900 text-white': currentPage === 1,
+                      'bg-gray-300': currentPage !== 1,
+                    }"
+                    class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                  >
+                    1
+                  </button>
+                  <button
+                    v-if="totalPages > 3"
+                    :class="{
+                      'bg-purple-900 text-white':
+                        currentPage !== 1 && currentPage !== totalPages,
+                      'bg-gray-300':
+                        currentPage === 1 || currentPage === totalPages,
+                    }"
+                    @click="setCurrentPage(getMiddlePage(0))"
+                    class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                  >
+                    {{
+                      currentPage !== 1 && currentPage !== totalPages
+                        ? currentPage
+                        : "..."
+                    }}
+                  </button>
+                  <button
+                    @click="setCurrentPage(totalPages)"
+                    :class="{
+                      'bg-purple-900 text-white': currentPage === totalPages,
+                      'bg-gray-300': currentPage !== totalPages,
+                    }"
+                    class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                  >
+                    {{ totalPages }}
+                  </button>
+                  <button
+                    :disabled="currentPage === totalPages"
+                    @click="currentPage = currentPage + 1"
+                    class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
+                  >
+                    ➡️
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -141,11 +206,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, Ref, ref, watch } from "vue";
 import * as d3 from "d3";
 import { world } from "../../utils/world";
 import ArtistCard from "./remi/ArtistCard.vue";
 import { formatNumber } from "../../utils/functions";
+import GenreTag from "./remi/GenreTag.vue";
 
 const data = ref(null);
 const isLoading = ref(true);
@@ -154,7 +220,8 @@ const showGlobalStats = ref(true);
 const name = ref("");
 const artists = ref([]);
 const countryInfo = ref({});
-const filterArtist = ref("");
+const genresFilter: Ref<string[]> = ref([]);
+let filterArtistName = ""; // Not a ref because we don't want to trigger a re-render
 
 onMounted(async () => {
   const response = await fetch(
@@ -165,36 +232,8 @@ onMounted(async () => {
 
   isLoading.value = false;
 
-  let totalNbSongs: number = 0;
-  let totalNbAlbums: number = 0;
-  let totalNbArtists: number = 0;
-  let totalNbDeezerFans: number = 0;
-  let totalNbUniqueGenres: number = 0;
-  let uniqueGenres: Set<string> = new Set();
-
-  data.value.forEach((country) => {
-    country.artists.forEach((artist) => {
-      totalNbArtists++;
-      totalNbAlbums += artist.nbAlbums || 0;
-      totalNbSongs += artist.nbSongs || 0;
-      totalNbDeezerFans += artist.deezerFans || 0;
-      uniqueGenres = new Set([...uniqueGenres, ...artist.genres]);
-    });
-  });
-
-  totalNbArtists = formatNumber(totalNbArtists);
-  totalNbSongs = formatNumber(totalNbSongs);
-  totalNbAlbums = formatNumber(totalNbAlbums);
-  totalNbDeezerFans = formatNumber(totalNbDeezerFans);
-  totalNbUniqueGenres = formatNumber(uniqueGenres.size);
-
-  globalInfos.value = {
-    chansons: totalNbSongs,
-    artistes: totalNbArtists,
-    albums: totalNbAlbums,
-    "fans cumulés": totalNbDeezerFans,
-    "genres uniques": totalNbUniqueGenres,
-  };
+  // SETUP GLOBAL DATA STATS
+  setupGlobalDataStats();
 
   const worldMap = d3.select("#worldMap");
   const width = 1000;
@@ -237,7 +276,7 @@ onMounted(async () => {
     .attr("pointer", "cursor")
     .attr("stroke-width", 0.5)
     .on("click", function (event, d) {
-      reset();
+      resetAll();
 
       showGlobalStats.value = false;
       name.value = d.properties.name;
@@ -253,50 +292,35 @@ onMounted(async () => {
       artists.value = countryInfo.value.artists.sort((a, b) => {
         return b.deezerFans - a.deezerFans;
       });
+
+      // Init displayed artists
+      filterAndPaginateArtists();
+
+      // Country on the map should be pinging
+      d3.select(this).attr("fill", "#591baa");
     })
     .on("mouseenter", function (event, d) {
-      // Show the tooltip next to the cursor
-      const cursor = d3.pointer(event, window);
+      setupTooltip(tooltip, event, d);
 
-      const countryTootltipInfo = {
-        name: d.properties.name,
-        nbArtists: data.value.find((country) => {
-          return country.country === d.properties.name;
-        })?.artists.length,
-        nbAlbums: data.value
-          .find((country) => {
-            return country.country === d.properties.name;
-          })
-          ?.artists.reduce((acc, artist) => {
-            return acc + artist.nbAlbums;
-          }, 0),
-      };
-
-      tooltip
-        .style("visibility", "visible")
-        .style("left", cursor[0] + 10 + "px")
-        .style("top", cursor[1] + 10 + "px");
-
-      if (!countryTootltipInfo.nbArtists || !countryTootltipInfo.nbAlbums) {
-        countryTootltipInfo.nbArtists = 0;
-        countryTootltipInfo.nbAlbums = 0;
+      // If country is selected, don't change color
+      if (name.value === d.properties.name) {
+        return;
       }
-      tooltip.html(`
-        <div class="flex flex-col p-1 gap-1">
-          <span class="text-xl font-bold">${countryTootltipInfo.name}</span>
-          <span class="w-full h-[2px] bg-white"></span>
-          <span class="text-lg">${countryTootltipInfo.nbArtists} artiste(s)</span>
-          <span class="text-lg">${countryTootltipInfo.nbAlbums} album(s)</span>
-        </div>
-      `);
 
       d3.select(this).attr("fill", "#c79ffb");
+
       // Cursor becomes a pointer
       d3.select(this).attr("cursor", "pointer");
     })
     .on("mouseleave", function (event, d) {
       // Hide and clear the tooltip
       tooltip.style("visibility", "hidden");
+
+      // If country is selected, don't change color
+      if (name.value === d.properties.name) {
+        return;
+      }
+
       d3.select(this).attr("fill", "#e0dbe9");
     });
 
@@ -306,60 +330,180 @@ onMounted(async () => {
   }
 });
 
-const reset = () => {
+const setupGlobalDataStats = () => {
+  let totalNbSongs: number = 0;
+  let totalNbAlbums: number = 0;
+  let totalNbArtists: number = 0;
+  let totalNbDeezerFans: number = 0;
+  let totalNbUniqueGenres: number = 0;
+  let uniqueGenres: Set<string> = new Set();
+
+  data.value.forEach((country) => {
+    country.artists.forEach((artist) => {
+      totalNbArtists++;
+      totalNbAlbums += artist.nbAlbums || 0;
+      totalNbSongs += artist.nbSongs || 0;
+      totalNbDeezerFans += artist.deezerFans || 0;
+      uniqueGenres = new Set([...uniqueGenres, ...artist.genres]);
+    });
+  });
+
+  totalNbArtists = formatNumber(totalNbArtists);
+  totalNbSongs = formatNumber(totalNbSongs);
+  totalNbAlbums = formatNumber(totalNbAlbums);
+  totalNbDeezerFans = formatNumber(totalNbDeezerFans);
+  totalNbUniqueGenres = formatNumber(uniqueGenres.size);
+
+  globalInfos.value = {
+    chansons: totalNbSongs,
+    artistes: totalNbArtists,
+    albums: totalNbAlbums,
+    "fans cumulés": totalNbDeezerFans,
+    "genres uniques": totalNbUniqueGenres,
+  };
+};
+
+const setupTooltip = (tooltip, event, d) => {
+  // Show the tooltip next to the cursor
+  const cursor = d3.pointer(event, window);
+
+  const countryTootltipInfo = {
+    name: d.properties.name,
+    nbArtists: formatNumber(
+      data.value.find((country) => {
+        return country.country === d.properties.name;
+      })?.artists.length,
+    ),
+    nbAlbums: formatNumber(
+      data.value
+        .find((country) => {
+          return country.country === d.properties.name;
+        })
+        ?.artists.reduce((acc, artist) => {
+          return acc + artist.nbAlbums;
+        }, 0),
+    ),
+    nbSongs: formatNumber(
+      data.value
+        .find((country) => {
+          return country.country === d.properties.name;
+        })
+        ?.artists.reduce((acc, artist) => {
+          return acc + artist.nbSongs;
+        }, 0),
+    ),
+  };
+
+  tooltip
+    .style("visibility", "visible")
+    .style("left", cursor[0] + 10 + "px")
+    .style("top", cursor[1] + 10 + "px");
+
+  // Display tooltip
+  tooltip.html(`
+        <div class="flex flex-col p-1 gap-1">
+          <span class="text-xl font-bold">${countryTootltipInfo.name}</span>
+          <span class="w-full h-[2px] bg-white"></span>
+          <span class="text-lg">${countryTootltipInfo.nbArtists} artiste(s)</span>
+          <span class="text-lg">${countryTootltipInfo.nbAlbums} album(s)</span>
+          <span class="text-lg">${countryTootltipInfo.nbSongs} chanson(s)</span>
+        </div>
+      `);
+};
+
+const resetAll = () => {
   d3.selectAll("path").attr("fill", "#e0dbe9");
   countryInfo.value = {};
   artists.value = [];
+  displayedArtists.value = [];
   showGlobalStats.value = true;
   name.value = "";
-  filterArtist.value = "";
+  filterArtistName = "";
   currentPage.value = 1;
 };
 
-/* FILTERED ARTISTS
-const filteredArtists = computed(() => {
-  if (filterArtist.value === "") {
-    return artists.value;
-  } else {
-    return artists.value.filter((artist) => {
-      return artist.artist
-        .toLowerCase()
-        .includes(filterArtist.value.toLowerCase());
-    });
-  }
-});
-*/
+const resetFilters = () => {
+  filterArtistName = "";
+  genresFilter.value = [];
+  currentPage.value = 1;
+  filterAndPaginateArtists();
+};
 
-const currentCountryArtists = computed(() => {
-  return countryInfo.value ? artists.value : [];
-});
+const addGenreFilter = (genre: string) => {
+  // If genre already in filter, do not add it
+  if (genresFilter.value.includes(genre)) {
+    return;
+  } else {
+    genresFilter.value = [...genresFilter.value, genre];
+  }
+  currentPage.value = 1;
+  filterAndPaginateArtists();
+};
+
+const removeGenre = (genre: string) => {
+  genresFilter.value = genresFilter.value.filter((g) => g !== genre);
+  currentPage.value = 1;
+  filterAndPaginateArtists();
+};
+
+// FILTERED AND PAGINATED ARTISTS
+const displayedArtists = ref([...artists.value]); // Define paginatedArtists as a ref
+
+const filterAndPaginateArtists = () => {
+  // Reset artists value to original value
+  // Check also the genres
+  artists.value = countryInfo.value.artists
+    .filter((artist) => {
+      const artistName = artist.artist.toLowerCase();
+      const searchName = filterArtistName.toLowerCase().trim();
+      const genres = artist.genres.map((genre) => genre.toLowerCase());
+
+      // Check if the artist's name contains the search term
+      const nameMatch = artistName.includes(searchName);
+
+      // Check if the artist's genres is in the genres filter
+      const genresMatch = genresFilter.value.every((genre) =>
+        genres.includes(genre.toLowerCase()),
+      );
+
+      return nameMatch && genresMatch;
+    })
+    .sort((a, b) => {
+      return b.deezerFans - a.deezerFans;
+    });
+
+  // If nb of artists is less than itemsPerPage, set currentPage to 1
+  if (
+    (filterArtistName && artists.value.length < itemsPerPage) ||
+    (artists.value.length < currentPage.value * itemsPerPage &&
+      currentPage.value !== totalPages.value)
+  ) {
+    currentPage.value = 1;
+  }
+
+  // Paginate the filtered artists
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+
+  displayedArtists.value = artists.value.slice(start, end);
+};
 
 const currentPage = ref(1);
-const itemsPerPage = 50;
+const itemsPerPage = 20;
+
+watch([currentPage], () => {
+  filterAndPaginateArtists();
+});
 
 const setCurrentPage = (page: number) => {
   currentPage.value = page;
 };
 
 const totalPages = computed(() => {
-  return Math.ceil(currentCountryArtists.value.length / itemsPerPage);
+  return countryInfo.value ? Math.ceil(artists.value.length / itemsPerPage) : 0;
 });
 
-const getMiddlePage = (section: number) => {
-  const middle = Math.ceil(totalPages.value / 2);
-  if (section === 1) {
-    return Math.min(currentPage.value + 1, middle);
-  } else if (section === 2) {
-    return Math.max(currentPage.value - 1, middle);
-  }
-
-  return middle;
+const getMiddlePage = () => {
+  return Math.ceil(totalPages.value / 2);
 };
-
-const paginatedArtists = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-
-  return currentCountryArtists.value.slice(start, end);
-});
 </script>

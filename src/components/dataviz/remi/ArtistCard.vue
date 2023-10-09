@@ -24,6 +24,11 @@ const nbAlbums = computed(() => {
 const nbSongs = computed(() => {
   return props.artist.nbSongs ? props.artist.nbSongs : 0;
 });
+
+const emit = defineEmits(["filter"]);
+const getGenre = (genre: string) => {
+  emit("filter", genre);
+};
 </script>
 
 <template>
@@ -45,7 +50,7 @@ const nbSongs = computed(() => {
           class="flex gap-1 flex-wrap font-medium text-sm"
         >
           <div v-for="genre in artist.genres">
-            <GenreTag :genre="genre" />
+            <GenreTag :genre="genre" @filter="getGenre(genre)" />
           </div>
         </div>
       </div>
