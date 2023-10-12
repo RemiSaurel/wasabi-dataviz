@@ -24,13 +24,13 @@ const { data, isLoading, error } = useArtist(artistName);
     </div>
     <div class="flex items-center gap-2">
       <a :href="data.urlSpotify" target="_blank">
-        <img class="h-10 w-10" src="../../public/spotify.svg" alt=""
+        <img class="h-10 w-10" src="/spotify.svg" alt=""
       /></a>
       <a :href="data.urlDeezer" target="_blank">
-        <img class="h-10 w-10 mr-2" src="../../public/deezer.png" alt=""
+        <img class="h-10 w-10 mr-2" src="/deezer.png" alt=""
       /></a>
       <a :href="data.urlYouTube" target="_blank">
-        <img class="h-8 w-8" src="../../public/youtube.svg" alt=""
+        <img class="h-8 w-8" src="/youtube.svg" alt=""
       /></a>
     </div>
 

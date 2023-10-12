@@ -8,22 +8,24 @@
     ></div>
     <span class="text-2xl font-bold">Chargement...</span>
   </div>
+
+  <!-- MAIN CONTAINER -->
   <div class="flex h-full relative">
-    <!-- LEFT SIDE DETAILS -->
+    <!-- TOGGLE FULL MAP -->
     <button
       type="button"
-      class="absolute top-3 bg-white p-2 ml-3 shadow transform z-10"
-      :class="[fullWidth ? 'left-0' : 'left-1/2']"
-      @click="toggleFullWidth"
+      class="absolute top-3 ml-3 p-2 bg-white shadow transform z-10 hover:bg-gray-50"
+      :class="[fullMap ? 'left-0' : 'left-1/2']"
+      @click="toggleFullMap"
     >
-      <span class="flex gap-1 text-sm items-center" v-if="fullWidth">
+      <span class="flex gap-1 text-sm items-center" v-if="fullMap">
         Afficher les infos
-        <img src="../../../public/arrow_right.svg" alt="arrow" />
+        <img src="/arrow_right.svg" alt="arrow" />
       </span>
-      <img v-else src="../../../public/arrow_left.svg" alt="arrow" />
+      <img v-else src="/arrow_left.svg" alt="arrow" />
     </button>
     <div
-      v-if="!fullWidth"
+      v-if="!fullMap"
       class="w-1/2 overflow-y-auto overflow-x-hidden p-4 transition-all duration-700 ease-in-out"
     >
       <!-- GLOBAL INFOS ON START + NO COUNTRY SELECTED -->
@@ -85,13 +87,13 @@
                   class="flex-grow-0 bg-purple-800 text-white rounded-md p-2 hover:bg-purple-900 transition-all"
                   @click="filterAndPaginateArtists"
                 >
-                  <img src="../../../public/search.svg" alt="search" />
+                  <img src="/search.svg" alt="search" />
                 </button>
                 <button
                   class="flex-grow-0 bg-red-700 text-white rounded-md p-2 hover:bg-red-800 transition-all"
                   @click="resetFilters"
                 >
-                  <img src="../../../public/bin.svg" alt="reset artist name" />
+                  <img src="/bin.svg" alt="reset artist name" />
                 </button>
               </div>
             </div>
@@ -115,7 +117,7 @@
                   avec
                 </span>
                 <span v-if="genresFilter.length > 0">
-                  {{ genresFilter.join(", ") }}
+                  {{ genresFilter.join(" + ") }}
                 </span>
                 <span v-else>aucun filtre</span>
                 <br />
@@ -204,7 +206,7 @@
     <!-- MAP -->
     <svg
       class="w-1/2 transition-all duration-700 ease-in-out"
-      :class="[isLoading ? '' : 'bg-blue-50', fullWidth ? 'w-full' : '']"
+      :class="[isLoading ? '' : 'bg-blue-50', fullMap ? 'w-full' : '']"
       id="worldMap"
     ></svg>
   </div>
@@ -495,7 +497,7 @@ const filterAndPaginateArtists = () => {
 
 const currentPage = ref(1);
 const itemsPerPage = 20;
-const fullWidth = ref(false);
+const fullMap = ref(false);
 
 watch([currentPage], () => {
   filterAndPaginateArtists();
@@ -513,15 +515,15 @@ const getMiddlePage = () => {
   return Math.ceil(totalPages.value / 2);
 };
 
-const toggleFullWidth = () => {
-  fullWidth.value = !fullWidth.value;
+const toggleFullMap = () => {
+  fullMap.value = !fullMap.value;
 
-  if (fullWidth.value) {
+  if (fullMap.value) {
     d3.select("#worldMap").attr("width", "100%");
   } else {
     d3.select("#worldMap").attr("width", "50%");
   }
 
-  console.log(fullWidth.value);
+  console.log(fullMap.value);
 };
 </script>
