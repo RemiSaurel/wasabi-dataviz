@@ -8,7 +8,7 @@
   >
     <div class="flex">
       <router-link to="/">
-        <img class="h-8 w-8" src="../../public/w.svg" />
+        <img class="h-8 w-8" src="/w.svg" />
       </router-link>
     </div>
 
@@ -23,8 +23,8 @@
     </div>
 
     <div class="flex">
-      <a href="https://github.com/RemiSaurel/wasabi-dataviz" target="_blank">
-        <img class="h-8 w-8" src="../../public/github.svg" />
+      <a href="https://github.com/wasabi-project" target="_blank">
+        <img class="h-8 w-8" src="/github.svg" />
       </a>
     </div>
   </nav>

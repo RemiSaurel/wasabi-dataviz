@@ -8,9 +8,26 @@
     ></div>
     <span class="text-2xl font-bold">Chargement...</span>
   </div>
-  <div class="flex h-full">
-    <!-- LEFT SIDE DETAILS -->
-    <div class="w-1/2 overflow-auto p-4">
+
+  <!-- MAIN CONTAINER -->
+  <div class="flex h-full relative">
+    <!-- TOGGLE FULL MAP -->
+    <button
+      type="button"
+      class="absolute top-3 ml-3 p-2 bg-white shadow transform z-10 hover:bg-gray-50"
+      :class="[fullMap ? 'left-0' : 'left-1/2']"
+      @click="toggleFullMap"
+    >
+      <span class="flex gap-1 text-sm items-center" v-if="fullMap">
+        Afficher les infos
+        <img src="/arrow_right.svg" alt="arrow" />
+      </span>
+      <img v-else src="/arrow_left.svg" alt="arrow" />
+    </button>
+    <div
+      v-if="!fullMap"
+      class="w-1/2 overflow-y-auto overflow-x-hidden p-4 transition-all duration-700 ease-in-out"
+    >
       <!-- GLOBAL INFOS ON START + NO COUNTRY SELECTED -->
       <div
         v-if="showGlobalStats && globalInfos"
@@ -28,167 +45,157 @@
       <!-- COUNTRY SELECTED -->
       <div v-else>
         <div v-if="!isLoading">
-          <div>
-            <div class="flex justify-between items-baseline">
-              <span class="text-2xl font-bold">{{ name }}</span>
+          <div class="flex justify-between items-baseline relative">
+            <span class="text-2xl font-bold">{{ name }}</span>
 
-              <button
-                type="button"
-                @click="resetAll"
-                class="bg-white rounded-md p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset"
+            <button
+              type="button"
+              @click="resetAll"
+              class="bg-white rounded-md p-1 text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset"
+            >
+              <span class="sr-only">Close menu</span>
+              <svg
+                class="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
               >
-                <span class="sr-only">Close menu</span>
-                <svg
-                  class="h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <div class="flex flex-col mt-2 gap-2">
+            <!-- SEARCHING ARTIST -->
+            <div class="flex items-center gap-2">
+              <input
+                type="text"
+                class="border border-gray-300 rounded-md p-2 w-4/5"
+                placeholder="Nom d'artiste..."
+                v-model="filterArtistName"
+                @keyup.enter="filterAndPaginateArtists"
+              />
+              <div class="flex-grow flex gap-2">
+                <button
+                  class="flex-grow-0 bg-purple-800 text-white rounded-md p-2 hover:bg-purple-900 transition-all"
+                  @click="filterAndPaginateArtists"
                 >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
+                  <img src="/search.svg" alt="search" />
+                </button>
+                <button
+                  class="flex-grow-0 bg-red-700 text-white rounded-md p-2 hover:bg-red-800 transition-all"
+                  @click="resetFilters"
+                >
+                  <img src="/bin.svg" alt="reset artist name" />
+                </button>
+              </div>
             </div>
 
-            <div class="flex flex-col mt-2 gap-2">
-              <!-- SEARCHING ARTIST -->
-              <div class="flex items-center gap-2">
-                <input
-                  type="text"
-                  class="border border-gray-300 rounded-md p-2 w-4/5"
-                  placeholder="Nom d'artiste..."
-                  v-model="filterArtistName"
-                  @keyup.enter="filterAndPaginateArtists"
-                />
-                <div class="flex-grow flex gap-2">
-                  <button
-                    class="flex-grow-0 bg-purple-800 text-white rounded-md p-2 hover:bg-purple-900 transition-all"
-                    @click="filterAndPaginateArtists"
-                  >
-                    <img src="../../../public/search.svg" alt="search" />
-                  </button>
-                  <button
-                    class="flex-grow-0 bg-red-700 text-white rounded-md p-2 hover:bg-red-800 transition-all"
-                    @click="resetFilters"
-                  >
-                    <img
-                      src="../../../public/bin.svg"
-                      alt="reset artist name"
-                    />
-                  </button>
+            <div class="flex flex-col gap-1 justify-between">
+              <!-- FILTERS AND NB RESULTS -->
+              <div v-if="genresFilter.length > 0" class="flex gap-1 flex-wrap">
+                <div class="flex gap-1" v-for="genre in genresFilter">
+                  <GenreTag
+                    :genre="genre"
+                    :closable="true"
+                    @removeGenre="removeGenre(genre)"
+                  />
                 </div>
               </div>
 
-              <div class="flex flex-col gap-1 justify-between">
-                <!-- FILTERS AND NB RESULTS -->
-                <div
-                  v-if="genresFilter.length > 0"
-                  class="flex gap-1 flex-wrap"
-                >
-                  <div class="flex gap-1" v-for="genre in genresFilter">
-                    <GenreTag
-                      :genre="genre"
-                      :closable="true"
-                      @removeGenre="removeGenre(genre)"
-                    />
-                  </div>
-                </div>
-
-                <div class="italic text-gray-700 text-sm">
-                  Recherche :
-                  <span v-if="filterArtistName">
-                    '{{ filterArtistName }}'
-                  </span>
-                  <span v-if="filterArtistName && genresFilter.length > 0">
-                    avec
-                  </span>
-                  <span v-if="genresFilter.length > 0">
-                    {{ genresFilter.join(", ") }}
-                  </span>
-                  <span v-else>aucun filtre</span>
-                  <br />
-                  {{ artists.length }} résultat(s)
-                </div>
-              </div>
-
-              <!-- ARTIST CARDS -->
-              <div
-                class="grid grid-cols-1 gap-x-4 gap-y-6 h-full xl:grid-cols-2"
-                v-if="displayedArtists.length > 0"
-              >
-                <ArtistCard
-                  @filter="addGenreFilter($event)"
-                  v-for="artist in displayedArtists"
-                  :artist="artist"
-                  :key="artist.artist"
-                />
-              </div>
-              <div v-else>
-                <span class="text-xl text-neutral-800">
-                  😔 Nous n'avons trouvé aucun résultat pour votre recherche...
+              <div class="italic text-gray-700 text-sm">
+                Recherche :
+                <span v-if="filterArtistName"> '{{ filterArtistName }}' </span>
+                <span v-if="filterArtistName && genresFilter.length > 0">
+                  avec
                 </span>
+                <span v-if="genresFilter.length > 0">
+                  {{ genresFilter.join(" + ") }}
+                </span>
+                <span v-else>aucun filtre</span>
+                <br />
+                {{ artists.length }} résultat(s)
               </div>
-              <!-- PAGINATION -->
-              <div class="flex justify-end mt-2" v-if="totalPages > 1">
-                <div class="flex">
-                  <button
-                    @click="currentPage = currentPage - 1"
-                    :disabled="currentPage === 1"
-                    class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
-                  >
-                    ⬅️
-                  </button>
-                  <button
-                    @click="setCurrentPage(1)"
-                    :class="{
-                      'bg-purple-900 text-white': currentPage === 1,
-                      'bg-gray-300': currentPage !== 1,
-                    }"
-                    class="px-3 py-2 rounded-md mx-1 cursor-pointer"
-                  >
-                    1
-                  </button>
-                  <button
-                    v-if="totalPages > 3"
-                    :class="{
-                      'bg-purple-900 text-white':
-                        currentPage !== 1 && currentPage !== totalPages,
-                      'bg-gray-300':
-                        currentPage === 1 || currentPage === totalPages,
-                    }"
-                    @click="setCurrentPage(getMiddlePage(0))"
-                    class="px-3 py-2 rounded-md mx-1 cursor-pointer"
-                  >
-                    {{
-                      currentPage !== 1 && currentPage !== totalPages
-                        ? currentPage
-                        : "..."
-                    }}
-                  </button>
-                  <button
-                    @click="setCurrentPage(totalPages)"
-                    :class="{
-                      'bg-purple-900 text-white': currentPage === totalPages,
-                      'bg-gray-300': currentPage !== totalPages,
-                    }"
-                    class="px-3 py-2 rounded-md mx-1 cursor-pointer"
-                  >
-                    {{ totalPages }}
-                  </button>
-                  <button
-                    :disabled="currentPage === totalPages"
-                    @click="currentPage = currentPage + 1"
-                    class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
-                  >
-                    ➡️
-                  </button>
-                </div>
+            </div>
+
+            <!-- ARTIST CARDS -->
+            <div
+              class="grid grid-cols-1 gap-x-4 gap-y-6 h-full xl:grid-cols-2"
+              v-if="displayedArtists.length > 0"
+            >
+              <ArtistCard
+                @filter="addGenreFilter($event)"
+                v-for="artist in displayedArtists"
+                :artist="artist"
+                :key="artist.artist"
+              />
+            </div>
+            <div v-else>
+              <span class="text-xl text-neutral-800">
+                😔 Nous n'avons trouvé aucun résultat pour votre recherche...
+              </span>
+            </div>
+            <!-- PAGINATION -->
+            <div class="flex justify-end mt-2" v-if="totalPages > 1">
+              <div class="flex">
+                <button
+                  @click="currentPage = currentPage - 1"
+                  :disabled="currentPage === 1"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
+                >
+                  ⬅️
+                </button>
+                <button
+                  @click="setCurrentPage(1)"
+                  :class="{
+                    'bg-purple-900 text-white': currentPage === 1,
+                    'bg-gray-300': currentPage !== 1,
+                  }"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                >
+                  1
+                </button>
+                <button
+                  v-if="totalPages > 3"
+                  :class="{
+                    'bg-purple-900 text-white':
+                      currentPage !== 1 && currentPage !== totalPages,
+                    'bg-gray-300':
+                      currentPage === 1 || currentPage === totalPages,
+                  }"
+                  @click="setCurrentPage(getMiddlePage(0))"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                >
+                  {{
+                    currentPage !== 1 && currentPage !== totalPages
+                      ? currentPage
+                      : "..."
+                  }}
+                </button>
+                <button
+                  @click="setCurrentPage(totalPages)"
+                  :class="{
+                    'bg-purple-900 text-white': currentPage === totalPages,
+                    'bg-gray-300': currentPage !== totalPages,
+                  }"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer"
+                >
+                  {{ totalPages }}
+                </button>
+                <button
+                  :disabled="currentPage === totalPages"
+                  @click="currentPage = currentPage + 1"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
+                >
+                  ➡️
+                </button>
               </div>
             </div>
           </div>
@@ -198,8 +205,8 @@
 
     <!-- MAP -->
     <svg
-      class="w-1/2"
-      :class="isLoading ? '' : 'bg-blue-50'"
+      class="w-1/2 transition-all duration-700 ease-in-out"
+      :class="[isLoading ? '' : 'bg-blue-50', fullMap ? 'w-full' : '']"
       id="worldMap"
     ></svg>
   </div>
@@ -490,6 +497,7 @@ const filterAndPaginateArtists = () => {
 
 const currentPage = ref(1);
 const itemsPerPage = 20;
+const fullMap = ref(false);
 
 watch([currentPage], () => {
   filterAndPaginateArtists();
@@ -505,5 +513,17 @@ const totalPages = computed(() => {
 
 const getMiddlePage = () => {
   return Math.ceil(totalPages.value / 2);
+};
+
+const toggleFullMap = () => {
+  fullMap.value = !fullMap.value;
+
+  if (fullMap.value) {
+    d3.select("#worldMap").attr("width", "100%");
+  } else {
+    d3.select("#worldMap").attr("width", "50%");
+  }
+
+  console.log(fullMap.value);
 };
 </script>
