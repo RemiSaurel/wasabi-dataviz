@@ -351,7 +351,14 @@ const setupGlobalDataStats = () => {
       totalNbAlbums += artist.nbAlbums || 0;
       totalNbSongs += artist.nbSongs || 0;
       totalNbDeezerFans += artist.deezerFans || 0;
-      uniqueGenres = new Set([...uniqueGenres, ...artist.genres]);
+      if (artist.genres) {
+        artist.genres.forEach((genre) => {
+          if (!uniqueGenres.has(genre)) {
+            uniqueGenres.add(genre);
+            totalNbUniqueGenres++;
+          }
+        });
+      }
     });
   });
 
@@ -359,7 +366,7 @@ const setupGlobalDataStats = () => {
   totalNbSongs = formatNumber(totalNbSongs);
   totalNbAlbums = formatNumber(totalNbAlbums);
   totalNbDeezerFans = formatNumber(totalNbDeezerFans);
-  totalNbUniqueGenres = formatNumber(uniqueGenres.size);
+  totalNbUniqueGenres = formatNumber(totalNbUniqueGenres);
 
   globalInfos.value = {
     chansons: totalNbSongs,
