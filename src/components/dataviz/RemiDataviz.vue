@@ -14,7 +14,7 @@
     <!-- TOGGLE FULL MAP -->
     <button
       type="button"
-      class="absolute top-3 ml-3 p-2 bg-white shadow transform z-10 hover:bg-gray-50"
+      class="absolute top-3 ml-3 p-2 bg-white shadow transform z-10 hover:bg-gray-100"
       :class="[fullMap ? 'left-0' : 'left-1/2']"
       @click="toggleFullMap"
     >
@@ -31,11 +31,11 @@
       <!-- GLOBAL INFOS ON START + NO COUNTRY SELECTED -->
       <div
         v-if="showGlobalStats && globalInfos"
-        class="grid grid-cols-1 lg:grid-cols-2 content-center place-self-center h-full gap-8"
+        class="grid grid-cols-1 gap-6 lg:grid-cols-2 content-center h-full"
       >
         <div
           v-for="(info, name) in globalInfos"
-          class="flex flex-col items-center"
+          class="flex flex-col items-center p-4 bg-neutral-100 rounded-2xl"
         >
           <span class="text-4xl font-bold">{{ info }}</span>
           <span class="text-xl">{{ name }}</span>
@@ -148,7 +148,7 @@
                 <button
                   @click="currentPage = currentPage - 1"
                   :disabled="currentPage === 1"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ⬅️
                 </button>
@@ -192,7 +192,7 @@
                 <button
                   :disabled="currentPage === totalPages"
                   @click="currentPage = currentPage + 1"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ➡️
                 </button>
@@ -220,6 +220,7 @@ import ArtistCard from "./remi/ArtistCard.vue";
 import { formatNumber } from "../../utils/functions";
 import GenreTag from "./remi/GenreTag.vue";
 
+// MAIN DATA
 const data = ref(null);
 const isLoading = ref(true);
 const globalInfos = ref(null);
@@ -229,6 +230,11 @@ const artists = ref([]);
 const countryInfo = ref({});
 const genresFilter: Ref<string[]> = ref([]);
 let filterArtistName = ""; // Not a ref because we don't want to trigger a re-render
+
+// PAGINATION VALUES
+const currentPage = ref(1);
+const itemsPerPage = 20;
+const fullMap = ref(false);
 
 onMounted(async () => {
   const response = await fetch(
@@ -266,7 +272,10 @@ onMounted(async () => {
   const tooltip = d3
     .select("body")
     .append("div")
-    .attr("class", "tooltip bg-purple-800  text-lg text-white p-2 rounded-md")
+    .attr(
+      "class",
+      "tooltip bg-purple-800 text-lg text-white pt-1 p-2 rounded-md",
+    )
     .style("position", "absolute")
     .style("z-index", "10")
     .style("visibility", "hidden");
@@ -362,12 +371,14 @@ const setupGlobalDataStats = () => {
     });
   });
 
+  // GLOBAL INFOS FORMAT
   totalNbArtists = formatNumber(totalNbArtists);
   totalNbSongs = formatNumber(totalNbSongs);
   totalNbAlbums = formatNumber(totalNbAlbums);
   totalNbDeezerFans = formatNumber(totalNbDeezerFans);
   totalNbUniqueGenres = formatNumber(totalNbUniqueGenres);
 
+  // CREATE GLOABL INFOS OBJECT
   globalInfos.value = {
     chansons: totalNbSongs,
     artistes: totalNbArtists,
@@ -418,9 +429,9 @@ const setupTooltip = (tooltip, event, d) => {
         <div class="flex flex-col p-1 gap-1">
           <span class="text-xl font-bold">${countryTootltipInfo.name}</span>
           <span class="w-full h-[2px] bg-white"></span>
-          <span class="text-lg">${countryTootltipInfo.nbArtists} artiste(s)</span>
-          <span class="text-lg">${countryTootltipInfo.nbAlbums} album(s)</span>
-          <span class="text-lg">${countryTootltipInfo.nbSongs} chanson(s)</span>
+          <span>${countryTootltipInfo.nbArtists} artiste(s)</span>
+          <span>${countryTootltipInfo.nbAlbums} album(s)</span>
+          <span>${countryTootltipInfo.nbSongs} chanson(s)</span>
         </div>
       `);
 };
@@ -441,6 +452,16 @@ const resetFilters = () => {
   genresFilter.value = [];
   currentPage.value = 1;
   filterAndPaginateArtists();
+};
+
+const toggleFullMap = () => {
+  fullMap.value = !fullMap.value;
+
+  if (fullMap.value) {
+    d3.select("#worldMap").attr("width", "100%");
+  } else {
+    d3.select("#worldMap").attr("width", "50%");
+  }
 };
 
 const addGenreFilter = (genre: string) => {
@@ -502,14 +523,6 @@ const filterAndPaginateArtists = () => {
   displayedArtists.value = artists.value.slice(start, end);
 };
 
-const currentPage = ref(1);
-const itemsPerPage = 20;
-const fullMap = ref(false);
-
-watch([currentPage], () => {
-  filterAndPaginateArtists();
-});
-
 const setCurrentPage = (page: number) => {
   currentPage.value = page;
 };
@@ -522,15 +535,7 @@ const getMiddlePage = () => {
   return Math.ceil(totalPages.value / 2);
 };
 
-const toggleFullMap = () => {
-  fullMap.value = !fullMap.value;
-
-  if (fullMap.value) {
-    d3.select("#worldMap").attr("width", "100%");
-  } else {
-    d3.select("#worldMap").attr("width", "50%");
-  }
-
-  console.log(fullMap.value);
-};
+watch([currentPage], () => {
+  filterAndPaginateArtists();
+});
 </script>
