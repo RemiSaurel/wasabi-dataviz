@@ -84,8 +84,8 @@ const getGenre = (genre: string) => {
   background: radial-gradient(
     circle,
     rgb(255, 255, 255) 0%,
-    rgb(230, 230, 240) 50%,
-    rgb(195, 195, 205) 100%
+    rgb(235, 235, 235) 50%,
+    rgb(220, 220, 220) 100%
   );
 }
 </style>

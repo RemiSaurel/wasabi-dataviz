@@ -289,7 +289,7 @@ onMounted(async () => {
     .enter()
     .append("path")
     .attr("d", path)
-    .attr("fill", "#e0dbe9")
+    .attr("fill", "#ebebeb")
     .attr("stroke", "black")
     .attr("pointer", "cursor")
     .attr("stroke-width", 0.5)
@@ -338,7 +338,7 @@ onMounted(async () => {
         return;
       }
 
-      d3.select(this).attr("fill", "#e0dbe9");
+      d3.select(this).attr("fill", "#ebebeb");
     });
 
   // Function to handle zooming
@@ -438,7 +438,7 @@ const setupTooltip = (tooltip, event, d) => {
 };
 
 const resetAll = () => {
-  d3.selectAll("path").attr("fill", "#e0dbe9");
+  d3.selectAll("path").attr("fill", "#ebebeb");
   countryInfo.value = {};
   artists.value = [];
   displayedArtists.value = [];
