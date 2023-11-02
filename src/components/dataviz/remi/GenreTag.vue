@@ -20,14 +20,16 @@ const closableIsHovered = ref(false);
   <button
     class="transition-all text-xs leading-3 text-white rounded-full px-2 py-1 cursor-pointer"
     :class="[
-      closable ? 'flex gap-1 items-center pr-1' : '',
+      closable
+        ? 'flex gap-1 items-center pr-1'
+        : 'hover:text-black hover:bg-white',
       closableIsHovered
         ? ' bg-red-700'
-        : ' bg-neutral-700 hover:bg-neutral-800',
+        : ' bg-neutral-600 hover:bg-neutral-800',
     ]"
     @click="$emit('filter', genre)"
   >
-    <span class="">
+    <span class="text-ellipsis">
       {{ genre }}
     </span>
     <button

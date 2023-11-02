@@ -34,17 +34,13 @@ const getGenre = (genre: string) => {
 <template>
   <div
     v-if="artist"
-    class="flex flex-col w-full h-full px-4 py-3 linear-bg rounded-lg hover:shadow-xl hover:scale-[1.02] transition-all"
+    class="flex flex-col aspect-square justify-between px-4 py-3 bg-neutral-200 rounded-lg cursor-default transition-all duration-300 group hover:shadow-xl hover:bg-neutral-800 hover:text-white"
   >
-    <div class="font-bold flex flex-col justify-between h-full gap-2 w-full">
-      <div class="flex flex-col gap-0.5">
-        <div class="flex text-2xl justify-between items-baseline">
-          <span class="w-3/5">{{ artist.artist }}</span>
-          <span v-if="artist.deezerFans" class="font-medium text-base">
-            ❤️ {{ deezerFansFormatted }}
-          </span>
-        </div>
-
+    <div class="font-bold flex flex-col gap-2 w-full">
+      <span class="break-words font-medium text-3xl">
+        {{ artist.artist }}
+      </span>
+      <div class="text-2xl justify-between items-baseline">
         <div
           v-show="artist.genres && artist.genres.length > 0"
           class="flex gap-1 flex-wrap font-medium text-sm"
@@ -54,38 +50,31 @@ const getGenre = (genre: string) => {
           </div>
         </div>
       </div>
-
-      <div class="flex justify-between">
-        <div>
-          <span v-if="artist.nbAlbums" class="text-4xl font-bold"
-            >{{ nbAlbums }}
-          </span>
-          <div class="font-medium leading-none">
-            <span v-if="artist.nbAlbums === 1">album</span>
-            <span v-else>albums</span>
-          </div>
+    </div>
+    <div class="mt-auto group-hover:hidden">
+      <span v-if="artist.deezerFans" class="font-medium text-2xl">
+        ❤️ {{ deezerFansFormatted }}
+      </span>
+    </div>
+    <div
+      class="hidden justify-between z-10 pointer-events-none group-hover:flex"
+    >
+      <div>
+        <span v-if="artist.nbAlbums" class="text-4xl">{{ nbAlbums }} </span>
+        <div class="font-medium leading-none">
+          <span v-if="artist.nbAlbums === 1">album</span>
+          <span v-else>albums</span>
         </div>
-        <div class="text-right">
-          <span v-if="artist.nbSongs" class="text-4xl font-bold"
-            >{{ nbSongs }}
-          </span>
-          <div class="font-medium leading-none">
-            <span v-if="artist.nbSongs === 1">chanson</span>
-            <span v-else>chansons</span>
-          </div>
+      </div>
+      <div class="text-right">
+        <span v-if="artist.nbSongs" class="text-4xl">{{ nbSongs }} </span>
+        <div class="font-medium leading-none">
+          <span v-if="artist.nbSongs === 1">chanson</span>
+          <span v-else>chansons</span>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-.linear-bg {
-  background: radial-gradient(
-    circle,
-    rgb(255, 255, 255) 0%,
-    rgb(235, 235, 235) 50%,
-    rgb(220, 220, 220) 100%
-  );
-}
-</style>
+<style scoped></style>

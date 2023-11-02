@@ -46,7 +46,7 @@
       <div v-else>
         <div v-if="!isLoading">
           <div class="flex justify-between items-baseline relative">
-            <span class="text-3xl font-bold mb-4">{{ name }}</span>
+            <span class="text-4xl font-bold mb-4 uppercase">{{ name }}</span>
 
             <button
               type="button"
@@ -129,7 +129,7 @@
 
             <!-- ARTIST CARDS -->
             <div
-              class="grid grid-cols-1 gap-4 h-full xl:grid-cols-2"
+              class="grid gap-4 lg:grid-cols-2 xl:grid-cols-2"
               v-if="displayedArtists.length > 0"
             >
               <ArtistCard
