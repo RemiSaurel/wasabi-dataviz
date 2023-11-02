@@ -4,7 +4,7 @@
     class="flex flex-col w-full h-full m-auto justify-center items-center gap-8"
   >
     <div
-      class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-900"
+      class="animate-spin rounded-full h-16 w-16 border-b-2 border-neutral-900"
     ></div>
     <span class="text-2xl font-bold">Chargement...</span>
   </div>
@@ -46,7 +46,7 @@
       <div v-else>
         <div v-if="!isLoading">
           <div class="flex justify-between items-baseline relative">
-            <span class="text-2xl font-bold">{{ name }}</span>
+            <span class="text-3xl font-bold mb-4">{{ name }}</span>
 
             <button
               type="button"
@@ -82,9 +82,9 @@
                 v-model="filterArtistName"
                 @keyup.enter="filterAndPaginateArtists"
               />
-              <div class="flex-grow flex gap-2">
+              <div class="flex-grow flex justify-between gap-2">
                 <button
-                  class="flex-grow-0 bg-purple-800 text-white rounded-md p-2 hover:bg-purple-900 transition-all"
+                  class="flex-grow-0 bg-neutral-800 text-white rounded-md p-2 hover:bg-neutral-900 transition-all"
                   @click="filterAndPaginateArtists"
                 >
                   <img src="/search.svg" alt="search" />
@@ -98,7 +98,7 @@
               </div>
             </div>
 
-            <div class="flex flex-col gap-1 justify-between">
+            <div class="flex flex-col gap-1 mb-4 justify-between">
               <!-- FILTERS AND NB RESULTS -->
               <div v-if="genresFilter.length > 0" class="flex gap-1 flex-wrap">
                 <div class="flex gap-1" v-for="genre in genresFilter">
@@ -119,7 +119,9 @@
                 <span v-if="genresFilter.length > 0">
                   {{ genresFilter.join(" + ") }}
                 </span>
-                <span v-else>aucun filtre</span>
+                <span v-if="!filterArtistName && genresFilter.length === 0"
+                  >aucun filtre</span
+                >
                 <br />
                 {{ artists.length }} résultat(s)
               </div>
@@ -127,7 +129,7 @@
 
             <!-- ARTIST CARDS -->
             <div
-              class="grid grid-cols-1 gap-x-4 gap-y-6 h-full xl:grid-cols-2"
+              class="grid grid-cols-1 gap-4 h-full xl:grid-cols-2"
               v-if="displayedArtists.length > 0"
             >
               <ArtistCard
@@ -155,7 +157,7 @@
                 <button
                   @click="setCurrentPage(1)"
                   :class="{
-                    'bg-purple-900 text-white': currentPage === 1,
+                    'bg-neutral-900 text-white': currentPage === 1,
                     'bg-gray-300': currentPage !== 1,
                   }"
                   class="px-3 py-2 rounded-md mx-1 cursor-pointer"
@@ -165,7 +167,7 @@
                 <button
                   v-if="totalPages > 3"
                   :class="{
-                    'bg-purple-900 text-white':
+                    'bg-neutral-900 text-white':
                       currentPage !== 1 && currentPage !== totalPages,
                     'bg-gray-300':
                       currentPage === 1 || currentPage === totalPages,
@@ -182,7 +184,7 @@
                 <button
                   @click="setCurrentPage(totalPages)"
                   :class="{
-                    'bg-purple-900 text-white': currentPage === totalPages,
+                    'bg-neutral-900 text-white': currentPage === totalPages,
                     'bg-gray-300': currentPage !== totalPages,
                   }"
                   class="px-3 py-2 rounded-md mx-1 cursor-pointer"
@@ -205,7 +207,7 @@
 
     <!-- MAP -->
     <svg
-      class="w-1/2 transition-all duration-700 ease-in-out"
+      class="w-1/2 transition-all duration-700 ease-in-out cursor-grab"
       :class="[isLoading ? '' : 'bg-blue-50', fullMap ? 'w-full' : '']"
       id="worldMap"
     ></svg>
@@ -274,7 +276,7 @@ onMounted(async () => {
     .append("div")
     .attr(
       "class",
-      "tooltip bg-purple-800 text-lg text-white pt-1 p-2 rounded-md",
+      "tooltip bg-neutral-800 text-lg text-white pt-1 p-2 rounded-md",
     )
     .style("position", "absolute")
     .style("z-index", "10")
@@ -296,7 +298,6 @@ onMounted(async () => {
 
       showGlobalStats.value = false;
       name.value = d.properties.name;
-      d3.select(this).attr("fill", "#c79ffb");
       countryInfo.value = data.value.find((country) => {
         return country.country === name.value;
       });
@@ -313,7 +314,7 @@ onMounted(async () => {
       filterAndPaginateArtists();
 
       // Country on the map should be pinging
-      d3.select(this).attr("fill", "#591baa");
+      d3.select(this).attr("fill", "#434e5c");
     })
     .on("mouseenter", function (event, d) {
       setupTooltip(tooltip, event, d);
@@ -323,7 +324,7 @@ onMounted(async () => {
         return;
       }
 
-      d3.select(this).attr("fill", "#c79ffb");
+      d3.select(this).attr("fill", "#a1a1ae");
 
       // Cursor becomes a pointer
       d3.select(this).attr("cursor", "pointer");

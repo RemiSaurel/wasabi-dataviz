@@ -34,10 +34,10 @@ const getGenre = (genre: string) => {
 <template>
   <div
     v-if="artist"
-    class="flex flex-col w-full h-full px-4 py-3 pb-1 bg-neutral-100 rounded-lg hover:bg-neutral-200 hover:shadow-xl hover:shadow-purple-100 hover:scale-[1.02] transition-all"
+    class="flex flex-col w-full h-full px-4 py-3 linear-bg rounded-lg hover:shadow-xl hover:scale-[1.02] transition-all"
   >
     <div class="font-bold flex flex-col justify-between h-full gap-2 w-full">
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-0.5">
         <div class="flex text-2xl justify-between items-baseline">
           <span class="w-3/5">{{ artist.artist }}</span>
           <span v-if="artist.deezerFans" class="font-medium text-base">
@@ -60,21 +60,32 @@ const getGenre = (genre: string) => {
           <span v-if="artist.nbAlbums" class="text-4xl font-bold"
             >{{ nbAlbums }}
           </span>
-          <br />
-          <span v-if="artist.nbAlbums === 1">album</span>
-          <span v-else>albums</span>
+          <div class="font-medium leading-none">
+            <span v-if="artist.nbAlbums === 1">album</span>
+            <span v-else>albums</span>
+          </div>
         </div>
         <div class="text-right">
           <span v-if="artist.nbSongs" class="text-4xl font-bold"
             >{{ nbSongs }}
           </span>
-          <br />
-          <span v-if="artist.nbSongs === 1">chanson</span>
-          <span v-else>chansons</span>
+          <div class="font-medium leading-none">
+            <span v-if="artist.nbSongs === 1">chanson</span>
+            <span v-else>chansons</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.linear-bg {
+  background: radial-gradient(
+    circle,
+    rgb(255, 255, 255) 0%,
+    rgb(230, 230, 240) 50%,
+    rgb(195, 195, 205) 100%
+  );
+}
+</style>
