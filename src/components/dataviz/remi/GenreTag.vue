@@ -18,7 +18,7 @@ const closableIsHovered = ref(false);
 <template>
   <!-- When closable is hovered, the whole button becomes red -->
   <button
-    class="transition-all text-xs leading-3 text-white rounded-full px-2 py-1 cursor-pointer"
+    class="transition-all text-xs leading-3 text-black bg-white rounded-full px-2 py-1 cursor-pointer"
     :class="[
       closable
         ? 'flex gap-1 items-center pr-1'

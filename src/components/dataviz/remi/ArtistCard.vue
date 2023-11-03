@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import GenreTag from "./GenreTag.vue";
-import { computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { formatNumber } from "../../../utils/functions";
+import { useArtist } from "../../../queries/artist.queries";
+import { fetchArtist } from "../../../services/artist-service";
+import router from "../../../router/routes";
 
 const props = defineProps<{
   artist: {
@@ -12,6 +15,27 @@ const props = defineProps<{
     nbSongs: number;
   };
 }>();
+
+const artistInfo = ref<any>(null);
+const alreadyFetched = ref<boolean>(false);
+const artistName = ref<string>(props.artist.artist);
+const artistPicture = ref<string>("");
+const loading = ref<boolean>(false);
+
+const getArtistInfo = async () => {
+  if (alreadyFetched.value) return;
+  loading.value = true;
+  artistInfo.value = await fetchArtist(artistName);
+  loading.value = false;
+  alreadyFetched.value = true;
+  artistPicture.value = getArtistPicture();
+};
+
+const getArtistPicture = () => {
+  if (artistInfo.value) {
+    return artistInfo.value["picture"]["medium"];
+  }
+};
 
 const deezerFansFormatted = computed(() => {
   return formatNumber(props.artist.deezerFans);
@@ -34,13 +58,16 @@ const getGenre = (genre: string) => {
 <template>
   <div
     v-if="artist"
-    class="flex flex-col aspect-square justify-between px-4 py-3 bg-neutral-200 rounded-lg cursor-default transition-all duration-300 group hover:shadow-xl hover:bg-neutral-800 hover:text-white"
+    @click="router.push({ name: 'Artist', params: { artist: artistName } })"
+    @mouseenter="getArtistInfo"
+    class="flex flex-col aspect-square justify-between px-4 py-3 bg-neutral-800 rounded-lg transition-all duration-300 group text-white shadow-2xl relative overflow-hidden hover:cursor-pointer"
+    :class="!artistPicture ? 'hover:bg-black' : ''"
   >
     <div class="font-bold flex flex-col gap-2 w-full">
-      <span class="break-words font-medium text-3xl">
+      <span class="break-words font-medium text-3xl z-50">
         {{ artist.artist }}
       </span>
-      <div class="text-2xl justify-between items-baseline">
+      <div class="text-2xl justify-between items-baseline z-50">
         <div
           v-show="artist.genres && artist.genres.length > 0"
           class="flex gap-1 flex-wrap font-medium text-sm"
@@ -50,27 +77,43 @@ const getGenre = (genre: string) => {
           </div>
         </div>
       </div>
-    </div>
-    <div class="mt-auto group-hover:hidden">
-      <span v-if="artist.deezerFans" class="font-medium text-2xl">
-        ❤️ {{ deezerFansFormatted }}
-      </span>
-    </div>
-    <div
-      class="hidden justify-between z-10 pointer-events-none group-hover:flex"
-    >
-      <div>
-        <span v-if="artist.nbAlbums" class="text-4xl">{{ nbAlbums }} </span>
-        <div class="font-medium leading-none">
-          <span v-if="artist.nbAlbums === 1">album</span>
-          <span v-else>albums</span>
-        </div>
+      <div
+        v-if="loading"
+        class="m-auto mt-8 animate-spin rounded-full h-8 w-8 border-b-2 border-white"
+      ></div>
+      <div v-if="artistPicture">
+        <div
+          class="absolute top-0 left-0 w-full h-full bg-black opacity-60 z-10 rounded-lg"
+        ></div>
+        <div
+          class="absolute rounded-lg inset-0 group-hover:scale-125 duration-500 ease-in-out transition-all"
+          :style="{
+            backgroundImage: `url('${artistPicture}')`,
+            backgroundSize: 'cover',
+          }"
+        ></div>
       </div>
-      <div class="text-right">
-        <span v-if="artist.nbSongs" class="text-4xl">{{ nbSongs }} </span>
-        <div class="font-medium leading-none">
-          <span v-if="artist.nbSongs === 1">chanson</span>
-          <span v-else>chansons</span>
+    </div>
+    <div class="flex justify-between items-end z-50 pointer-events-none">
+      <span class="font-medium text-2xl">
+        ❤️
+        <span v-if="artist.deezerFans">{{ deezerFansFormatted }}</span>
+        <span v-else>0</span>
+      </span>
+      <div class="flex flex-col text-right">
+        <div>
+          <span v-if="artist.nbAlbums" class="text-4xl">{{ nbAlbums }} </span>
+          <div class="font-medium leading-none">
+            <span v-if="artist.nbAlbums === 1">album</span>
+            <span v-else>albums</span>
+          </div>
+        </div>
+        <div>
+          <span v-if="artist.nbSongs" class="text-4xl">{{ nbSongs }} </span>
+          <div class="font-medium leading-none">
+            <span v-if="artist.nbSongs === 1">chanson</span>
+            <span v-else>chansons</span>
+          </div>
         </div>
       </div>
     </div>

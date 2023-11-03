@@ -129,7 +129,7 @@
 
             <!-- ARTIST CARDS -->
             <div
-              class="grid gap-4 lg:grid-cols-2 xl:grid-cols-2"
+              class="grid gap-4 grid-cols-1 xl:grid-cols-2"
               v-if="displayedArtists.length > 0"
             >
               <ArtistCard
