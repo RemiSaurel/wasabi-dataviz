@@ -20,10 +20,10 @@ const changeTab = (tabName) => {
       <a
         @click="changeTab('Adam')"
         :class="{
-          'text-blue-600 bg-gray-100 rounded-t-lg active': tab === 'Adam',
+          'text-black bg-gray-100 rounded-t-lg active': tab === 'Adam',
         }"
         aria-current="page"
-        class="inline-block p-4 rounded-t-lg hover:text-gray-600 hover:bg-gray-50 cursor-pointer"
+        class="inline-block p-4 rounded-t-lg hover:bg-gray-50 cursor-pointer"
         >Adam</a
       >
     </li>
@@ -31,9 +31,9 @@ const changeTab = (tabName) => {
       <a
         @click="changeTab('Chaimae')"
         :class="{
-          'text-blue-600 bg-gray-100 rounded-t-lg active': tab === 'Chaimae',
+          'text-black bg-gray-100 rounded-t-lg active': tab === 'Chaimae',
         }"
-        class="inline-block p-4 rounded-t-lg hover:text-gray-600 hover:bg-gray-50 cursor-pointer"
+        class="inline-block p-4 rounded-t-lg hover:bg-gray-50 cursor-pointer"
         >Chaimae</a
       >
     </li>
@@ -41,9 +41,9 @@ const changeTab = (tabName) => {
       <a
         @click="changeTab('Mathieu')"
         :class="{
-          'text-blue-600 bg-gray-100 rounded-t-lg active': tab === 'Mathieu',
+          'text-black bg-gray-100 rounded-t-lg active': tab === 'Mathieu',
         }"
-        class="inline-block p-4 rounded-t-lg hover:text-gray-600 hover:bg-gray-50 cursor-pointer"
+        class="inline-block p-4 rounded-t-lg hover:bg-gray-50 cursor-pointer"
         >Mathieu</a
       >
     </li>
@@ -51,9 +51,9 @@ const changeTab = (tabName) => {
       <a
         @click="changeTab('Rémi')"
         :class="{
-          'text-blue-600 bg-gray-100 rounded-t-lg active': tab === 'Rémi',
+          'text-black bg-gray-100 rounded-t-lg active': tab === 'Rémi',
         }"
-        class="inline-block p-4 rounded-t-lg hover:text-gray-600 hover:bg-gray-50 cursor-pointer"
+        class="inline-block p-4 rounded-t-lg hover:bg-gray-50 cursor-pointer"
         >Rémi</a
       >
     </li>
