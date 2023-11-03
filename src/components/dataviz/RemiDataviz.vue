@@ -4,7 +4,7 @@
     class="flex flex-col w-full h-full m-auto justify-center items-center gap-8"
   >
     <div
-      class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-900"
+      class="animate-spin rounded-full h-16 w-16 border-b-2 border-neutral-900"
     ></div>
     <span class="text-2xl font-bold">Chargement...</span>
   </div>
@@ -14,7 +14,7 @@
     <!-- TOGGLE FULL MAP -->
     <button
       type="button"
-      class="absolute top-3 ml-3 p-2 bg-white shadow transform z-10 hover:bg-gray-50"
+      class="absolute top-3 ml-3 p-2 bg-white shadow transform z-10 hover:bg-gray-100"
       :class="[fullMap ? 'left-0' : 'left-1/2']"
       @click="toggleFullMap"
     >
@@ -31,11 +31,11 @@
       <!-- GLOBAL INFOS ON START + NO COUNTRY SELECTED -->
       <div
         v-if="showGlobalStats && globalInfos"
-        class="grid grid-cols-1 lg:grid-cols-2 content-center place-self-center h-full gap-8"
+        class="grid grid-cols-1 gap-6 lg:grid-cols-2 content-center h-full"
       >
         <div
           v-for="(info, name) in globalInfos"
-          class="flex flex-col items-center"
+          class="flex flex-col items-center p-4 bg-neutral-100 rounded-2xl"
         >
           <span class="text-4xl font-bold">{{ info }}</span>
           <span class="text-xl">{{ name }}</span>
@@ -46,7 +46,7 @@
       <div v-else>
         <div v-if="!isLoading">
           <div class="flex justify-between items-baseline relative">
-            <span class="text-2xl font-bold">{{ name }}</span>
+            <span class="text-4xl font-bold mb-4 uppercase">{{ name }}</span>
 
             <button
               type="button"
@@ -82,9 +82,9 @@
                 v-model="filterArtistName"
                 @keyup.enter="filterAndPaginateArtists"
               />
-              <div class="flex-grow flex gap-2">
+              <div class="flex-grow flex justify-between gap-2">
                 <button
-                  class="flex-grow-0 bg-purple-800 text-white rounded-md p-2 hover:bg-purple-900 transition-all"
+                  class="flex-grow-0 bg-neutral-800 text-white rounded-md p-2 hover:bg-neutral-900 transition-all"
                   @click="filterAndPaginateArtists"
                 >
                   <img src="/search.svg" alt="search" />
@@ -98,7 +98,7 @@
               </div>
             </div>
 
-            <div class="flex flex-col gap-1 justify-between">
+            <div class="flex flex-col gap-1 mb-4 justify-between">
               <!-- FILTERS AND NB RESULTS -->
               <div v-if="genresFilter.length > 0" class="flex gap-1 flex-wrap">
                 <div class="flex gap-1" v-for="genre in genresFilter">
@@ -119,7 +119,9 @@
                 <span v-if="genresFilter.length > 0">
                   {{ genresFilter.join(" + ") }}
                 </span>
-                <span v-else>aucun filtre</span>
+                <span v-if="!filterArtistName && genresFilter.length === 0"
+                  >aucun filtre</span
+                >
                 <br />
                 {{ artists.length }} résultat(s)
               </div>
@@ -127,7 +129,7 @@
 
             <!-- ARTIST CARDS -->
             <div
-              class="grid grid-cols-1 gap-x-4 gap-y-6 h-full xl:grid-cols-2"
+              class="grid gap-4 grid-cols-1 xl:grid-cols-2"
               v-if="displayedArtists.length > 0"
             >
               <ArtistCard
@@ -148,14 +150,14 @@
                 <button
                   @click="currentPage = currentPage - 1"
                   :disabled="currentPage === 1"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ⬅️
                 </button>
                 <button
                   @click="setCurrentPage(1)"
                   :class="{
-                    'bg-purple-900 text-white': currentPage === 1,
+                    'bg-neutral-900 text-white': currentPage === 1,
                     'bg-gray-300': currentPage !== 1,
                   }"
                   class="px-3 py-2 rounded-md mx-1 cursor-pointer"
@@ -165,7 +167,7 @@
                 <button
                   v-if="totalPages > 3"
                   :class="{
-                    'bg-purple-900 text-white':
+                    'bg-neutral-900 text-white':
                       currentPage !== 1 && currentPage !== totalPages,
                     'bg-gray-300':
                       currentPage === 1 || currentPage === totalPages,
@@ -182,7 +184,7 @@
                 <button
                   @click="setCurrentPage(totalPages)"
                   :class="{
-                    'bg-purple-900 text-white': currentPage === totalPages,
+                    'bg-neutral-900 text-white': currentPage === totalPages,
                     'bg-gray-300': currentPage !== totalPages,
                   }"
                   class="px-3 py-2 rounded-md mx-1 cursor-pointer"
@@ -192,7 +194,7 @@
                 <button
                   :disabled="currentPage === totalPages"
                   @click="currentPage = currentPage + 1"
-                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50"
+                  class="px-3 py-2 rounded-md mx-1 cursor-pointer bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ➡️
                 </button>
@@ -205,7 +207,7 @@
 
     <!-- MAP -->
     <svg
-      class="w-1/2 transition-all duration-700 ease-in-out"
+      class="w-1/2 transition-all duration-700 ease-in-out cursor-grab"
       :class="[isLoading ? '' : 'bg-blue-50', fullMap ? 'w-full' : '']"
       id="worldMap"
     ></svg>
@@ -220,6 +222,7 @@ import ArtistCard from "./remi/ArtistCard.vue";
 import { formatNumber } from "../../utils/functions";
 import GenreTag from "./remi/GenreTag.vue";
 
+// MAIN DATA
 const data = ref(null);
 const isLoading = ref(true);
 const globalInfos = ref(null);
@@ -229,6 +232,11 @@ const artists = ref([]);
 const countryInfo = ref({});
 const genresFilter: Ref<string[]> = ref([]);
 let filterArtistName = ""; // Not a ref because we don't want to trigger a re-render
+
+// PAGINATION VALUES
+const currentPage = ref(1);
+const itemsPerPage = 20;
+const fullMap = ref(false);
 
 onMounted(async () => {
   const response = await fetch(
@@ -266,7 +274,10 @@ onMounted(async () => {
   const tooltip = d3
     .select("body")
     .append("div")
-    .attr("class", "tooltip bg-purple-800  text-lg text-white p-2 rounded-md")
+    .attr(
+      "class",
+      "tooltip bg-neutral-800 text-lg text-white pt-1 p-2 rounded-md",
+    )
     .style("position", "absolute")
     .style("z-index", "10")
     .style("visibility", "hidden");
@@ -278,7 +289,7 @@ onMounted(async () => {
     .enter()
     .append("path")
     .attr("d", path)
-    .attr("fill", "#e0dbe9")
+    .attr("fill", "#ebebeb")
     .attr("stroke", "black")
     .attr("pointer", "cursor")
     .attr("stroke-width", 0.5)
@@ -287,7 +298,6 @@ onMounted(async () => {
 
       showGlobalStats.value = false;
       name.value = d.properties.name;
-      d3.select(this).attr("fill", "#c79ffb");
       countryInfo.value = data.value.find((country) => {
         return country.country === name.value;
       });
@@ -304,7 +314,7 @@ onMounted(async () => {
       filterAndPaginateArtists();
 
       // Country on the map should be pinging
-      d3.select(this).attr("fill", "#591baa");
+      d3.select(this).attr("fill", "#434e5c");
     })
     .on("mouseenter", function (event, d) {
       setupTooltip(tooltip, event, d);
@@ -314,7 +324,7 @@ onMounted(async () => {
         return;
       }
 
-      d3.select(this).attr("fill", "#c79ffb");
+      d3.select(this).attr("fill", "#a1a1ae");
 
       // Cursor becomes a pointer
       d3.select(this).attr("cursor", "pointer");
@@ -328,7 +338,7 @@ onMounted(async () => {
         return;
       }
 
-      d3.select(this).attr("fill", "#e0dbe9");
+      d3.select(this).attr("fill", "#ebebeb");
     });
 
   // Function to handle zooming
@@ -351,16 +361,25 @@ const setupGlobalDataStats = () => {
       totalNbAlbums += artist.nbAlbums || 0;
       totalNbSongs += artist.nbSongs || 0;
       totalNbDeezerFans += artist.deezerFans || 0;
-      uniqueGenres = new Set([...uniqueGenres, ...artist.genres]);
+      if (artist.genres) {
+        artist.genres.forEach((genre) => {
+          if (!uniqueGenres.has(genre)) {
+            uniqueGenres.add(genre);
+            totalNbUniqueGenres++;
+          }
+        });
+      }
     });
   });
 
+  // GLOBAL INFOS FORMAT
   totalNbArtists = formatNumber(totalNbArtists);
   totalNbSongs = formatNumber(totalNbSongs);
   totalNbAlbums = formatNumber(totalNbAlbums);
   totalNbDeezerFans = formatNumber(totalNbDeezerFans);
-  totalNbUniqueGenres = formatNumber(uniqueGenres.size);
+  totalNbUniqueGenres = formatNumber(totalNbUniqueGenres);
 
+  // CREATE GLOABL INFOS OBJECT
   globalInfos.value = {
     chansons: totalNbSongs,
     artistes: totalNbArtists,
@@ -411,15 +430,15 @@ const setupTooltip = (tooltip, event, d) => {
         <div class="flex flex-col p-1 gap-1">
           <span class="text-xl font-bold">${countryTootltipInfo.name}</span>
           <span class="w-full h-[2px] bg-white"></span>
-          <span class="text-lg">${countryTootltipInfo.nbArtists} artiste(s)</span>
-          <span class="text-lg">${countryTootltipInfo.nbAlbums} album(s)</span>
-          <span class="text-lg">${countryTootltipInfo.nbSongs} chanson(s)</span>
+          <span>${countryTootltipInfo.nbArtists} artiste(s)</span>
+          <span>${countryTootltipInfo.nbAlbums} album(s)</span>
+          <span>${countryTootltipInfo.nbSongs} chanson(s)</span>
         </div>
       `);
 };
 
 const resetAll = () => {
-  d3.selectAll("path").attr("fill", "#e0dbe9");
+  d3.selectAll("path").attr("fill", "#ebebeb");
   countryInfo.value = {};
   artists.value = [];
   displayedArtists.value = [];
@@ -434,6 +453,16 @@ const resetFilters = () => {
   genresFilter.value = [];
   currentPage.value = 1;
   filterAndPaginateArtists();
+};
+
+const toggleFullMap = () => {
+  fullMap.value = !fullMap.value;
+
+  if (fullMap.value) {
+    d3.select("#worldMap").attr("width", "100%");
+  } else {
+    d3.select("#worldMap").attr("width", "50%");
+  }
 };
 
 const addGenreFilter = (genre: string) => {
@@ -495,14 +524,6 @@ const filterAndPaginateArtists = () => {
   displayedArtists.value = artists.value.slice(start, end);
 };
 
-const currentPage = ref(1);
-const itemsPerPage = 20;
-const fullMap = ref(false);
-
-watch([currentPage], () => {
-  filterAndPaginateArtists();
-});
-
 const setCurrentPage = (page: number) => {
   currentPage.value = page;
 };
@@ -515,15 +536,7 @@ const getMiddlePage = () => {
   return Math.ceil(totalPages.value / 2);
 };
 
-const toggleFullMap = () => {
-  fullMap.value = !fullMap.value;
-
-  if (fullMap.value) {
-    d3.select("#worldMap").attr("width", "100%");
-  } else {
-    d3.select("#worldMap").attr("width", "50%");
-  }
-
-  console.log(fullMap.value);
-};
+watch([currentPage], () => {
+  filterAndPaginateArtists();
+});
 </script>
