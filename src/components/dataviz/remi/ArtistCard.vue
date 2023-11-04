@@ -58,13 +58,15 @@ const getGenre = (genre: string) => {
 <template>
   <div
     v-if="artist"
-    @click="router.push({ name: 'Artist', params: { artist: artistName } })"
     @mouseenter="getArtistInfo"
-    class="flex flex-col aspect-square justify-between px-4 py-3 bg-neutral-800 rounded-lg transition-all duration-300 group text-white shadow-2xl relative overflow-hidden hover:cursor-pointer"
+    class="flex flex-col aspect-square justify-between px-4 py-3 bg-neutral-800 rounded-lg transition-all duration-300 group text-white shadow-2xl relative overflow-hidden"
     :class="!artistPicture ? 'hover:bg-black' : ''"
   >
     <div class="font-bold flex flex-col gap-2 w-full">
-      <span class="break-words font-medium text-3xl z-50">
+      <span
+        @click="router.push({ name: 'Artist', params: { artist: artistName } })"
+        class="break-words font-medium text-3xl z-50 hover:cursor-pointer"
+      >
         {{ artist.artist }}
       </span>
       <div class="text-2xl justify-between items-baseline z-50">
@@ -72,7 +74,7 @@ const getGenre = (genre: string) => {
           v-show="artist.genres && artist.genres.length > 0"
           class="flex gap-1 flex-wrap font-medium text-sm"
         >
-          <div v-for="genre in artist.genres">
+          <div v-for="genre in artist.genres" class="z-40">
             <GenreTag :genre="genre" @filter="getGenre(genre)" />
           </div>
         </div>
