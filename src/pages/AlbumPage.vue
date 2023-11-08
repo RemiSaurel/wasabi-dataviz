@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { useAlbum } from "../queries/search.queries";
-import { computed, ref, watch, onMounted, Ref } from "vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
-import { songs } from "../queries/song.queries";
 
 const route = useRoute();
 const artistId = ref(route.params.artist);
@@ -35,28 +34,64 @@ const duration = computed(() => {
 </script>
 
 <template>
-  <div v-if="isLoading">Loading...</div>
+  <div
+    v-if="isLoading"
+    class="flex flex-col h-full m-auto justify-center items-center gap-8"
+  >
+    <div
+      class="animate-spin rounded-full h-16 w-16 border-b-2 border-neutral-900"
+    ></div>
+    <span class="text-2xl font-bold">Chargement...</span>
+  </div>
   <div class="flex flex-col gap-2" v-else-if="data">
     <div class="flex gap-4">
       <img
-        class="h-36 w-36"
+        class="h-44 w-44"
         v-if="data['albums']['cover']"
         :src="data['albums']['cover']['big']"
       />
       <div class="flex flex-col justify-between">
-        <span class="text-5xl font-bold w-80">{{
+        <!-- ALBUM NAME -->
+        <span class="text-5xl font-bold w-96">{{
           data["albums"]["title"]
         }}</span>
-        <div class="text-md text-gray-900">
-          <router-link
-            class="font-bold hover:underline"
-            :to="{ name: 'Artist', params: { artist: artistName } }"
-          >
-            {{ artistName }}
-          </router-link>
-          |
-          {{ data["albums"]["publicationDate"] }} | {{ nbSongs }} titres
-          <span class="text-gray-500">{{ duration }}</span>
+
+        <!-- BOTTOM CONTAINER -->
+        <div>
+          <div class="flex items-end hover:cursor-pointer">
+            <a
+              v-if="data['albums']['urlSpotify']"
+              :href="data['albums']['urlSpotify']"
+              target="_blank"
+            >
+              <img class="h-10 w-10" src="/spotify.svg" alt=""
+            /></a>
+            <a
+              v-if="data['albums']['urlDeezer']"
+              :href="data['albums']['urlDeezer']"
+              target="_blank"
+            >
+              <img class="h-10 w-10 mr-2" src="/deezer.png" alt=""
+            /></a>
+            <a
+              v-if="data['albums']['urlYoutube']"
+              :href="data['albums']['urlYoutube']"
+              target="_blank"
+            >
+              <img class="h-8 w-8" src="/youtube.svg" alt=""
+            /></a>
+          </div>
+          <div class="text-md text-gray-900">
+            <router-link
+              class="font-bold hover:underline"
+              :to="{ name: 'Artist', params: { artist: artistName } }"
+            >
+              {{ artistName }}
+            </router-link>
+            |
+            {{ data["albums"]["publicationDate"] }} | {{ nbSongs }} titres
+            <span class="text-gray-500">{{ duration }}</span>
+          </div>
         </div>
       </div>
     </div>
