@@ -1,13 +1,5 @@
 <template>
-  <div
-    v-if="isLoading"
-    class="flex flex-col w-full h-full m-auto justify-center items-center gap-8"
-  >
-    <div
-      class="animate-spin rounded-full h-16 w-16 border-b-2 border-neutral-900"
-    ></div>
-    <span class="text-2xl font-bold">Chargement...</span>
-  </div>
+  <LoadingSpinner v-if="isLoading" :isLoading="isLoading" />
 
   <!-- MAIN CONTAINER -->
   <div class="flex h-full relative">
@@ -34,11 +26,11 @@
         class="grid grid-cols-1 gap-6 lg:grid-cols-2 content-center h-full"
       >
         <div
-          v-for="(info, name) in globalInfos"
+          v-for="(info, name, i) in globalInfos"
           class="flex flex-col items-center p-4 bg-neutral-100 rounded-2xl"
         >
           <span class="text-4xl font-bold">{{ info }}</span>
-          <span class="text-xl">{{ name }}</span>
+          <span class="text-xl">{{ GLOBAL_DATA_KEYS[i] }}</span>
         </div>
       </div>
 
@@ -46,7 +38,9 @@
       <div v-else>
         <div v-if="!isLoading">
           <div class="flex justify-between items-baseline relative">
-            <span class="text-4xl font-bold mb-4 uppercase">{{ name }}</span>
+            <span class="text-4xl font-bold mb-4 uppercase">{{
+              countryName
+            }}</span>
 
             <button
               type="button"
@@ -123,7 +117,7 @@
                   >aucun filtre</span
                 >
                 <br />
-                {{ artists.length }} résultat(s)
+                {{ artistList.length }} résultat(s)
               </div>
             </div>
 
@@ -205,7 +199,7 @@
       </div>
     </div>
 
-    <!-- MAP -->
+    <!-- D3JS DATAVIZ MAP -->
     <svg
       class="w-1/2 transition-all duration-700 ease-in-out cursor-grab"
       :class="[isLoading ? '' : 'bg-blue-50', fullMap ? 'w-full' : '']"
@@ -221,16 +215,18 @@ import { world } from "../../utils/world";
 import ArtistCard from "./remi/ArtistCard.vue";
 import { formatNumber } from "../../utils/functions";
 import GenreTag from "./remi/GenreTag.vue";
+import { GLOBAL_DATA_KEYS, GlobalData, RemiData } from "../../models/models";
+import LoadingSpinner from "../LoadingSpinner.vue";
 
 // MAIN DATA
-const data = ref(null);
-const isLoading = ref(true);
-const globalInfos = ref(null);
-const showGlobalStats = ref(true);
-const name = ref("");
-const artists = ref([]);
-const countryInfo = ref({});
-const genresFilter: Ref<string[]> = ref([]);
+const data: Ref<RemiData[]> = ref(null); // My data loaded from my json file in public/data
+const isLoading = ref(true); // Check if data from file is loading
+const globalInfos: Ref<GlobalData> = ref(null); // Global data stats
+const showGlobalStats = ref(true); // boolean to display global stats or specific country stats
+const countryName = ref("");
+const artistList = ref([]); // List of artists from a specific country
+const countryInfo = ref({}); // Country info from a specific country
+const genresFilter: Ref<string[]> = ref([]); // List of genres used to filter
 let filterArtistName = ""; // Not a ref because we don't want to trigger a re-render
 
 // PAGINATION VALUES
@@ -239,26 +235,32 @@ const itemsPerPage = 20;
 const fullMap = ref(false);
 
 onMounted(async () => {
+  // Import data from file
   const response = await fetch(
     import.meta.env.BASE_URL + "data/full_countries_clean.json",
   );
 
+  // Transform our data to a json object
   data.value = await response.json();
 
+  // Not loading anymore
   isLoading.value = false;
 
   // SETUP GLOBAL DATA STATS
   setupGlobalDataStats();
 
+  // We select the SVG with the id worldMap and setup its width and height
   const worldMap = d3.select("#worldMap");
   const width = 1000;
   const height = 600;
 
+  // We define a projection with the Mercator projection
   const projection = d3
     .geoMercator()
     .scale(120) // Adjust the initial scale as needed
     .translate([width / 3, height / 1.5]);
 
+  // We define a path using the projection
   const path = d3.geoPath().projection(projection);
 
   // Create a zoom behavior
@@ -270,7 +272,7 @@ onMounted(async () => {
   // Create a container for the map elements
   const mapContainer = worldMap.append("g");
 
-  // Create a tooltip element
+  // Create a tooltip element with some styles
   const tooltip = d3
     .select("body")
     .append("div")
@@ -282,7 +284,7 @@ onMounted(async () => {
     .style("z-index", "10")
     .style("visibility", "hidden");
 
-  // Display the world map
+  // Display the world map with the countries and setup eventListeners
   mapContainer
     .selectAll("path")
     .data(world.features)
@@ -297,16 +299,16 @@ onMounted(async () => {
       resetAll();
 
       showGlobalStats.value = false;
-      name.value = d.properties.name;
+      countryName.value = d.properties.name;
       countryInfo.value = data.value.find((country) => {
-        return country.country === name.value;
+        return country.country === countryName.value;
       });
 
       if (!countryInfo.value) {
         return;
       }
       // Get artists and sort by nbDeezerFans
-      artists.value = countryInfo.value.artists.sort((a, b) => {
+      artistList.value = countryInfo.value.artists.sort((a, b) => {
         return b.deezerFans - a.deezerFans;
       });
 
@@ -320,7 +322,7 @@ onMounted(async () => {
       setupTooltip(tooltip, event, d);
 
       // If country is selected, don't change color
-      if (name.value === d.properties.name) {
+      if (countryName.value === d.properties.name) {
         return;
       }
 
@@ -334,7 +336,7 @@ onMounted(async () => {
       tooltip.style("visibility", "hidden");
 
       // If country is selected, don't change color
-      if (name.value === d.properties.name) {
+      if (countryName.value === d.properties.name) {
         return;
       }
 
@@ -347,6 +349,7 @@ onMounted(async () => {
   }
 });
 
+// Function to setup the global data stats when we arrive on the page
 const setupGlobalDataStats = () => {
   let totalNbSongs: number = 0;
   let totalNbAlbums: number = 0;
@@ -372,20 +375,13 @@ const setupGlobalDataStats = () => {
     });
   });
 
-  // GLOBAL INFOS FORMAT
-  totalNbArtists = formatNumber(totalNbArtists);
-  totalNbSongs = formatNumber(totalNbSongs);
-  totalNbAlbums = formatNumber(totalNbAlbums);
-  totalNbDeezerFans = formatNumber(totalNbDeezerFans);
-  totalNbUniqueGenres = formatNumber(totalNbUniqueGenres);
-
-  // CREATE GLOABL INFOS OBJECT
+  // CREATE GLOBAL INFOS OBJECT
   globalInfos.value = {
-    chansons: totalNbSongs,
-    artistes: totalNbArtists,
-    albums: totalNbAlbums,
-    "fans cumulés": totalNbDeezerFans,
-    "genres uniques": totalNbUniqueGenres,
+    totalNbArtists: formatNumber(totalNbArtists),
+    totalNbSongs: formatNumber(totalNbSongs),
+    totalNbAlbums: formatNumber(totalNbAlbums),
+    totalNbDeezerFans: formatNumber(totalNbDeezerFans),
+    totalNbUniqueGenres: formatNumber(totalNbUniqueGenres),
   };
 };
 
@@ -393,33 +389,28 @@ const setupTooltip = (tooltip, event, d) => {
   // Show the tooltip next to the cursor
   const cursor = d3.pointer(event, window);
 
+  // Load the country data only once
+  const countryData = data.value.find((country) => {
+    return country.country === d.properties.name;
+  });
+
+  // Get info to display in tooltip
   const countryTootltipInfo = {
-    name: d.properties.name,
-    nbArtists: formatNumber(
-      data.value.find((country) => {
-        return country.country === d.properties.name;
-      })?.artists.length,
-    ),
+    name: countryData.country,
+    nbArtists: formatNumber(countryData.artists.length),
     nbAlbums: formatNumber(
-      data.value
-        .find((country) => {
-          return country.country === d.properties.name;
-        })
-        ?.artists.reduce((acc, artist) => {
-          return acc + artist.nbAlbums;
-        }, 0),
+      countryData.artists.reduce((acc, artist) => {
+        return acc + artist.nbAlbums;
+      }, 0),
     ),
     nbSongs: formatNumber(
-      data.value
-        .find((country) => {
-          return country.country === d.properties.name;
-        })
-        ?.artists.reduce((acc, artist) => {
-          return acc + artist.nbSongs;
-        }, 0),
+      countryData.artists.reduce((acc, artist) => {
+        return acc + artist.nbSongs;
+      }, 0),
     ),
   };
 
+  // Styles for the tooltip
   tooltip
     .style("visibility", "visible")
     .style("left", cursor[0] + 10 + "px")
@@ -437,17 +428,19 @@ const setupTooltip = (tooltip, event, d) => {
       `);
 };
 
+// Reset all values (click on the cross)
 const resetAll = () => {
   d3.selectAll("path").attr("fill", "#ebebeb");
   countryInfo.value = {};
-  artists.value = [];
+  artistList.value = [];
   displayedArtists.value = [];
   showGlobalStats.value = true;
-  name.value = "";
+  countryName.value = "";
   filterArtistName = "";
   currentPage.value = 1;
 };
 
+// Reset the filters (click on the bin)
 const resetFilters = () => {
   filterArtistName = "";
   genresFilter.value = [];
@@ -455,6 +448,7 @@ const resetFilters = () => {
   filterAndPaginateArtists();
 };
 
+// Handling toggle full map
 const toggleFullMap = () => {
   fullMap.value = !fullMap.value;
 
@@ -465,6 +459,7 @@ const toggleFullMap = () => {
   }
 };
 
+// Add new genre to filter
 const addGenreFilter = (genre: string) => {
   // If genre already in filter, do not add it
   if (genresFilter.value.includes(genre)) {
@@ -476,19 +471,21 @@ const addGenreFilter = (genre: string) => {
   filterAndPaginateArtists();
 };
 
+// Remove genre from filter
 const removeGenre = (genre: string) => {
   genresFilter.value = genresFilter.value.filter((g) => g !== genre);
   currentPage.value = 1;
   filterAndPaginateArtists();
 };
 
-// FILTERED AND PAGINATED ARTISTS
-const displayedArtists = ref([...artists.value]); // Define paginatedArtists as a ref
+// Filtered + paginated artists
+const displayedArtists = ref([...artistList.value]); // Define paginatedArtists as a ref
 
+// Filter and paginate artists
 const filterAndPaginateArtists = () => {
   // Reset artists value to original value
   // Check also the genres
-  artists.value = countryInfo.value.artists
+  artistList.value = countryInfo.value.artists
     .filter((artist) => {
       const artistName = artist.artist.toLowerCase();
       const searchName = filterArtistName.toLowerCase().trim();
@@ -502,7 +499,7 @@ const filterAndPaginateArtists = () => {
         genres.includes(genre.toLowerCase()),
       );
 
-      return nameMatch && genresMatch;
+      return nameMatch && genresMatch; // We have an 'AND' condition since we need to match on both the name + genres selected
     })
     .sort((a, b) => {
       return b.deezerFans - a.deezerFans;
@@ -510,8 +507,8 @@ const filterAndPaginateArtists = () => {
 
   // If nb of artists is less than itemsPerPage, set currentPage to 1
   if (
-    (filterArtistName && artists.value.length < itemsPerPage) ||
-    (artists.value.length < currentPage.value * itemsPerPage &&
+    (filterArtistName && artistList.value.length < itemsPerPage) ||
+    (artistList.value.length < currentPage.value * itemsPerPage &&
       currentPage.value !== totalPages.value)
   ) {
     currentPage.value = 1;
@@ -521,7 +518,7 @@ const filterAndPaginateArtists = () => {
   const start = (currentPage.value - 1) * itemsPerPage;
   const end = start + itemsPerPage;
 
-  displayedArtists.value = artists.value.slice(start, end);
+  displayedArtists.value = artistList.value.slice(start, end);
 };
 
 const setCurrentPage = (page: number) => {
@@ -529,13 +526,16 @@ const setCurrentPage = (page: number) => {
 };
 
 const totalPages = computed(() => {
-  return countryInfo.value ? Math.ceil(artists.value.length / itemsPerPage) : 0;
+  return countryInfo.value
+    ? Math.ceil(artistList.value.length / itemsPerPage)
+    : 0;
 });
 
 const getMiddlePage = () => {
   return Math.ceil(totalPages.value / 2);
 };
 
+// Check if page changed, if so, filter and paginate artists
 watch([currentPage], () => {
   filterAndPaginateArtists();
 });

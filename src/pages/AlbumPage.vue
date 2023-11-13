@@ -2,6 +2,7 @@
 import { useAlbum } from "../queries/search.queries";
 import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
+import LoadingSpinner from "../components/LoadingSpinner.vue";
 
 const route = useRoute();
 const artistId = ref(route.params.artist);
@@ -34,15 +35,8 @@ const duration = computed(() => {
 </script>
 
 <template>
-  <div
-    v-if="isLoading"
-    class="flex flex-col h-full m-auto justify-center items-center gap-8"
-  >
-    <div
-      class="animate-spin rounded-full h-16 w-16 border-b-2 border-neutral-900"
-    ></div>
-    <span class="text-2xl font-bold">Chargement...</span>
-  </div>
+  <LoadingSpinner v-if="isLoading" :isLoading="isLoading" />
+
   <div class="flex flex-col gap-2" v-else-if="data">
     <div class="flex gap-4">
       <img
