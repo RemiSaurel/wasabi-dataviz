@@ -1,20 +1,20 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import StatCard from "../components/home/StatCard.vue";
 
 const search = ref("");
-const router = useRouter();
 const searchResults = ref([]);
 const stats = ref({});
-const searchArtist = async (search: string) => {
-  await router.push({ name: "Artist", params: { artist: search } });
-};
 
 const getStats = async () => {
   const result = await fetch(`https://wasabi.i3s.unice.fr/search/dbinfo`);
   stats.value = await result.json();
 };
+
+const statsLoaded = computed(() => {
+  return Object.keys(stats.value).length > 0;
+});
 
 watch(search, async () => {
   if (search.value.length === 0) {
@@ -34,7 +34,7 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col gap-4">
-    <div class="flex gap-24 mb-8 justify-center text-center">
+    <div v-if="statsLoaded" class="flex gap-24 mb-8 justify-center text-center">
       <StatCard title="Artists" :value="stats.nbArtist" />
       <StatCard title="Albums" :value="stats.nbAlbum" />
       <StatCard title="Songs" :value="stats.nbSong" />
@@ -48,12 +48,6 @@ onMounted(() => {
           placeholder="Que souhaitez-vous découvrir ?"
           required
         />
-        <button
-          class="bg-neutral-800 text-white text-lg hover:bg-neutral-900 rounded-lg px-4 py-2 transition-all"
-          @click="searchArtist(search)"
-        >
-          Search
-        </button>
       </div>
       <div
         class="w-1/2 min-w-[300px] rounded-lg flex flex-col justify-center items-center bg-neutral-100 overflow-auto"
