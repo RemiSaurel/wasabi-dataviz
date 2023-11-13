@@ -25,6 +25,14 @@ const loading = ref<boolean>(false);
 const getArtistInfo = async () => {
   if (alreadyFetched.value) return;
   loading.value = true;
+  // If loading time is > 5sec, just cancel and display nothing
+  setTimeout(() => {
+    if (loading.value) {
+      loading.value = false;
+      alreadyFetched.value = true;
+      artistPicture.value = getArtistPicture();
+    }
+  }, 5000);
   artistInfo.value = await fetchArtist(artistName);
   loading.value = false;
   alreadyFetched.value = true;
