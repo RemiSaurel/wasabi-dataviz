@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import GenreTag from "./GenreTag.vue";
-import { computed, onMounted, ref } from "vue";
+import { computed, ref } from "vue";
 import { formatNumber } from "../../../utils/functions";
-import { useArtist } from "../../../queries/artist.queries";
 import { fetchArtist } from "../../../services/artist-service";
 import router from "../../../router/routes";
 
