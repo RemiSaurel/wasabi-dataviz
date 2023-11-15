@@ -1,4 +1,5 @@
 <template>
+  <LoadingSpinner v-if="isLoading" :isLoading="isLoading" />
   <svg></svg>
 </template>
 
@@ -8,10 +9,18 @@
 import * as d3 from "d3";
 import {onMounted, ref} from "vue";
 import {formatNumber} from "../../utils/functions";
+import LoadingSpinner from "../LoadingSpinner.vue";
+
+const isLoading = ref(true);
 
 onMounted(async () => {
   const data = await d3.json(import.meta.env.BASE_URL + "data/full_genres_clean.json");
   // Specify the dimensions of the chart.
+  const data_without_unknown = {
+    "name": "All genres",
+    "children" : data.children.filter((d) => d.name !== "Unknown")
+  };
+
   const width = 900;
   const height = width;
   const margin = 1; // to avoid clipping the root circle stroke
@@ -27,7 +36,7 @@ onMounted(async () => {
   // Compute the hierarchy from the JSON data; recursively sum the
   // values for each node; sort the tree by descending value; lastly
   // apply the pack layout.
-  const root = pack(d3.hierarchy(data)
+  const root = pack(d3.hierarchy(data_without_unknown)
       .sum(d => d.nbFans)
       .sort((a, b) => b.nbFans - a.nbFans));
 
@@ -82,7 +91,7 @@ onMounted(async () => {
         <div class="flex flex-col p-1 gap-1">
           <span class="text-xl font-bold">${d.data.name}</span>
           <span class="w-full h-[2px] bg-white"></span>
-          <span>${format(d.value)} fan(s)</span>
+          <span>${formatNumber(d.value)} fan(s)</span>
         </div>
       `);
     }
@@ -130,7 +139,8 @@ onMounted(async () => {
       .attr("x", 0)
       .attr("y", d => `${d.data.name.split(/(?=[A-Z][a-z])|\s+/g).length / 2 + 0.35}em`)
       .attr("fill-opacity", 0.7)
-      .text(d => format(d.value));
+      .text(d => formatNumber(d.value));
 
+  isLoading.value = false;
 });
 </script>
