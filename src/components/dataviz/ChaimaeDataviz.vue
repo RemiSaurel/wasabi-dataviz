@@ -1,7 +1,8 @@
 <template>
   <div>
     <h2>Nuage de Points - Artistes</h2>
-    <svg id="chart"></svg>
+    <svg id="chart" class=" bg-neutral-200 rounded-lg" ></svg>
+    <div class="h-4"></div>
   </div>
 </template>
 
@@ -20,7 +21,7 @@ onMounted( async () => {
   data.value = await response.json();
 
 
-  const margin = {top: 100, right: 50, bottom: 120, left: 50};
+  const margin = {top: 24, right: 70, bottom: 48, left: 100};
   const width = 1000 - margin.left - margin.right;
   const height = 700 - margin.top - margin.bottom;
 
@@ -33,7 +34,7 @@ onMounted( async () => {
   // Créer l'échelle pour les axes
   const xScale = d3.scaleLinear()
       .domain([0, d3.max(data.value, d => d.nbAlbums)])
-      .range([0, 700]);
+      .range([0, width - 200 ]);
 
   const xAxis = d3.axisBottom(xScale);
   chart.append('g')
@@ -41,7 +42,7 @@ onMounted( async () => {
       .call(xAxis);
 
   const yScale = d3.scaleLinear()
-      .domain([0, d3.max(data.value, d => d.nbSongs)])
+      .domain([0, d3.max(data.value, d => d.avgAlbumsFans)])
       .range([height, 0]);
 
   const yAxis = d3.axisLeft(yScale);
@@ -51,15 +52,15 @@ onMounted( async () => {
   chart.append("text")
       .attr("text-anchor", "end")
       .attr("x", width/2)
-      .attr("y", height + margin.top -50)
+      .attr("y", height+ 40)
       .text("Nombre d'albums");
   // Y axis label:
   chart.append("text")
       .attr("text-anchor", "end")
       .attr("transform", "rotate(-90)")
-      .attr("y", -margin.left +10)
-      .attr("x", -margin.top)
-      .text("Nombre de chansons");
+      .attr("y", -margin.left + 24)
+      .attr("x", -margin.top - height/2 + 100)
+      .text("Moyenne de fans par album");
 
   // Créer l'échelle de couleur pour le nombre de fans
   const colorScale = d3.scaleSequential(d3.interpolateReds)
@@ -70,7 +71,7 @@ onMounted( async () => {
       .enter()
       .append('circle')
       .attr('cx', d => xScale(d.nbAlbums))
-      .attr('cy', d => yScale(d.nbSongs))
+      .attr('cy', d => yScale(d.avgAlbumsFans))
       .attr('r', 4)
       .attr('fill', d => colorScale(d.deezerFans));
   //add legend for color scale
@@ -78,7 +79,7 @@ onMounted( async () => {
       .attr("class", "legend")
       .attr("transform", "translate(" + (width - 100) + "," + 20 + ")")
       .selectAll("g")
-      .data(colorScale.ticks(6).slice(1).reverse())
+      .data(colorScale.ticks(6).reverse())
       .enter().append("g");
   //add legend color
   legend.append("rect")
@@ -97,7 +98,7 @@ onMounted( async () => {
       .attr("x", -10)
       .attr("y", -20)
       .attr("dy", ".35em")
-      .text("Nombre de fans");
+      .text("Nombre de fans Deezer");
 });
 
 
@@ -110,5 +111,11 @@ h2 {
   font-size: 1.5em;
   font-weight: bold;
   margin-bottom: 20px;
+}
+/* Add style to svg*/
+svg {
+  display: block;
+  margin: auto;
+
 }
 </style>
