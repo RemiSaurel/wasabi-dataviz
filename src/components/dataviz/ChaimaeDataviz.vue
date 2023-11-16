@@ -1,120 +1,114 @@
 <template>
   <div>
-    <svg width="800" height="600" id="spider-chart">
-    </svg>
+    <h2>Nuage de Points - Artistes</h2>
+    <svg id="chart"></svg>
   </div>
 </template>
 
 <script setup lang="ts">
 import * as d3 from 'd3';
-import { onMounted } from "vue";
+import { ref , onMounted} from 'vue';
+const data = ref(null);
+const chart = ref(null);
+// Importez les données depuis le fichier JSON
 
-onMounted(() => {
-  const data = [
-    { category: 'Catégorie 1', value: 4 },
-    { category: 'Catégorie 2', value: 7 },
-    { category: 'Catégorie 3', value: 5 },
-    { category: 'Catégorie 4', value: 2 },
-    { category: 'Catégorie 5', value: 6 },
-  ];
+onMounted( async () => {
+  const response = await fetch(
+      import.meta.env.BASE_URL + "data/ch_artists_infos.json",
+  );
 
-  const width = 800;
-  const height = 600;
+  data.value = await response.json();
 
 
+  const margin = {top: 100, right: 50, bottom: 120, left: 50};
+  const width = 1000 - margin.left - margin.right;
+  const height = 700 - margin.top - margin.bottom;
 
-  const svg = d3.select('#spider-chart')
-      .attr('width', width)
-      .attr('height', height);
+  // Créer le nuage de points
+  const chart = d3.select("#chart")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  // Créer l'échelle pour les axes
+  const xScale = d3.scaleLinear()
+      .domain([0, d3.max(data.value, d => d.nbAlbums)])
+      .range([0, 700]);
 
-  const centerX = width / 2;
-  const centerY = height / 2;
+  const xAxis = d3.axisBottom(xScale);
+  chart.append('g')
+      .attr('transform', `translate(0, ${height})`)
+      .call(xAxis);
 
-  const scale = d3.scaleLinear()
-      .domain([0, d3.max(data, d => d.value) || 10])
-      .range([0, Math.min(centerX, centerY)]);
+  const yScale = d3.scaleLinear()
+      .domain([0, d3.max(data.value, d => d.nbSongs)])
+      .range([height, 0]);
 
-  const line = d3.lineRadial<number>()
-      .angle((d, i) => (i * 2 * Math.PI) / data.length)
-      .radius(d => scale(d.value));
-//affichage des cercles arrières
+  const yAxis = d3.axisLeft(yScale);
+  chart.append("g")
+      .call(yAxis);
+  //add labels to X and Y axis
+  chart.append("text")
+      .attr("text-anchor", "end")
+      .attr("x", width/2)
+      .attr("y", height + margin.top -50)
+      .text("Nombre d'albums");
+  // Y axis label:
+  chart.append("text")
+      .attr("text-anchor", "end")
+      .attr("transform", "rotate(-90)")
+      .attr("y", -margin.left +10)
+      .attr("x", -margin.top)
+      .text("Nombre de chansons");
 
-  svg.selectAll('circle')
-      .data(scale.ticks(5).slice(1))
+  // Créer l'échelle de couleur pour le nombre de fans
+  const colorScale = d3.scaleSequential(d3.interpolateReds)
+      .domain([0, d3.max(data.value, d => d.deezerFans)]);
+
+  chart.selectAll('circle')
+      .data(data.value)
       .enter()
       .append('circle')
-      .attr('cx', centerX)
-      .attr('cy', centerY)
-      .attr('fill', 'none')
-      .attr('stroke', 'gray')
-      .attr('r', d => scale(d));
-  //affichage des lignes des axes
-  svg.selectAll('line')
-      .data(data)
-      .enter()
-      .append('line')
-      .attr('x1', centerX)
-      .attr('y1', centerY)
-      .attr('x2', (d, i) => centerX + scale(d.value) * Math.cos((i * 2 * Math.PI) / data.length))
-      .attr('y2', (d, i) => centerY + scale(d.value) * Math.sin((i * 2 * Math.PI) / data.length))
-      .attr('stroke', 'white');
-
-//affichage catégories
-  svg.append('g')
-      .selectAll('text')
-      .data(data)
-      .enter()
-      .append('text')
-      .text(d => d.category)
-      .attr('x', (d, i) => centerX + scale(scale.ticks(5).pop()) * Math.cos((i * 2 * Math.PI) / data.length))
-      .attr('y', (d, i) => centerY + scale(scale.ticks(5).pop()) * Math.sin((i * 2 * Math.PI) / data.length))
-      .attr('text-anchor', 'middle')
-      .attr('alignment-baseline', 'middle')
-      .attr('fill', 'white')
-      .attr('font-size', 14)
-      .attr('font-weight', 'bold');
-//affichage des axes
-  svg.append('g')
-      .selectAll('text')
-      .data(data)
-      .enter()
-      .append('text')
-      .text(d => d.value)
-      .attr('x', (d, i) => centerX + scale(d.value) * Math.cos((i * 2 * Math.PI) / data.length))
-      .attr('y', (d, i) => centerY + scale(d.value) * Math.sin((i * 2 * Math.PI) / data.length))
-      .attr('text-anchor', 'middle')
-      .attr('alignment-baseline', 'middle')
-      .attr('fill', 'white')
-      .attr('font-size', 14)
-      .attr('font-weight', 'bold');
-
-
-//affichage des lignes
-  svg.append('line')
-      .attr('x1', centerX + scale(data[0].value) * Math.cos(0))
-      .attr('y1', centerY + scale(data[0].value) * Math.sin(0))
-      .attr('x2', centerX + scale(data[data.length - 1].value) * Math.cos((data.length - 1) * 2 * Math.PI / data.length))
-      .attr('y2', centerY + scale(data[data.length - 1].value) * Math.sin((data.length - 1) * 2 * Math.PI / data.length))
-      .attr('stroke', 'gray');
-  //affichage du polygone
-  let path =d3.path();
-  path.moveTo(centerX + scale(data[0].value) * Math.cos(0), centerY + scale(data[0].value) * Math.sin(0));
-  //affichage de path
-  data.forEach((d, i) => {
-    path.lineTo(centerX + scale(d.value) * Math.cos(i * 2 * Math.PI / data.length), centerY + scale(d.value) * Math.sin(i * 2 * Math.PI / data.length));
-  });
-  //ajout de path
-  svg.append('path')
-      .attr('d', path)
-      .attr('fill', 'rgba(255, 255, 255, 0.5)')
-      .attr('stroke', 'white');
+      .attr('cx', d => xScale(d.nbAlbums))
+      .attr('cy', d => yScale(d.nbSongs))
+      .attr('r', 4)
+      .attr('fill', d => colorScale(d.deezerFans));
+  //add legend for color scale
+  const legend = chart.append("g")
+      .attr("class", "legend")
+      .attr("transform", "translate(" + (width - 100) + "," + 20 + ")")
+      .selectAll("g")
+      .data(colorScale.ticks(6).slice(1).reverse())
+      .enter().append("g");
+  //add legend color
+  legend.append("rect")
+      .attr("width", 20)
+      .attr("height", 20)
+      .attr("y", function(d, i) { return i * 20; })
+      .attr("fill", colorScale);
+  //add legend text
+  legend.append("text")
+      .attr("x", 30)
+      .attr("y", function(d, i) { return (i * 20) + 9; })
+      .attr("dy", ".35em")
+      .text(String);
+  //add legend title
+  legend.append("text")
+      .attr("x", -10)
+      .attr("y", -20)
+      .attr("dy", ".35em")
+      .text("Nombre de fans");
 });
+
 
 </script>
 
 <style scoped>
-svg {
-  background-color: #213547;
+/* Add style to h2*/
+h2 {
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: bold;
+  margin-bottom: 20px;
 }
-
 </style>
