@@ -11,27 +11,30 @@ import * as d3 from "d3";
 import { ref, onMounted } from "vue";
 const data = ref(null);
 const chart = ref(null);
-// Importez les données depuis le fichier JSON
+const legendTitle = "Nombre de fans Deezer"
+const yAxisLabel = "Moyenne de fans par album"
+const xAxisLabel = "Nombre d'albums"
 
 onMounted(async () => {
+  // Importing data from json file
   const response = await fetch(
     import.meta.env.BASE_URL + "data/ch_artists_infos.json",
   );
 
   data.value = await response.json();
-
-  const margin = { top: 24, right: 70, bottom: 48, left: 100 };
+  // Set the dimensions and margins of the graph
+  const margin = { top: 24, right: 72, bottom: 48, left: 96 };
   const width = 1000 - margin.left - margin.right;
-  const height = 700 - margin.top - margin.bottom;
+  const height = 720 - margin.top - margin.bottom;
 
-  // Créer le nuage de points
+  // Create the svg element chart
   const chart = d3
     .select("#chart")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-  // Créer l'échelle pour les axes
+  // Create the scales for X and Y axis
   const xScale = d3
     .scaleLinear()
     .domain([0, d3.max(data.value, (d) => d.nbAlbums)])
@@ -53,17 +56,17 @@ onMounted(async () => {
     .attr("text-anchor", "end")
     .attr("x", width / 2)
     .attr("y", height + 40)
-    .text("Nombre d'albums");
+    .text(xAxisLabel);
   // Y axis label:
   chart
     .append("text")
     .attr("text-anchor", "end")
     .attr("transform", "rotate(-90)")
     .attr("y", -margin.left + 24)
-    .attr("x", -margin.top - height / 2 + 100)
-    .text("Moyenne de fans par album");
+    .attr("x", -margin.top - height / 2 + 104)
+    .text(yAxisLabel);
 
-  // Créer l'échelle de couleur pour le nombre de fans
+  // Create a sequential color scale for deezer fans
   const colorScale = d3
     .scaleSequential(d3.interpolateReds)
     .domain([0, d3.max(data.value, (d) => d.deezerFans)]);
@@ -81,7 +84,7 @@ onMounted(async () => {
   const legend = chart
     .append("g")
     .attr("class", "legend")
-    .attr("transform", "translate(" + (width - 100) + "," + 20 + ")")
+    .attr("transform", "translate(" + (width - 104) + "," + 24 + ")")
     .selectAll("g")
     .data(colorScale.ticks(6).reverse())
     .enter()
@@ -89,28 +92,28 @@ onMounted(async () => {
   //add legend color
   legend
     .append("rect")
-    .attr("width", 20)
-    .attr("height", 20)
+    .attr("width", 24)
+    .attr("height", 24)
     .attr("y", function (d, i) {
-      return i * 20;
+      return i * 24;
     })
     .attr("fill", colorScale);
   //add legend text
   legend
     .append("text")
-    .attr("x", 30)
+    .attr("x", 32)
     .attr("y", function (d, i) {
-      return i * 20 + 9;
+      return i * 24 + 8;
     })
     .attr("dy", ".35em")
     .text(String);
   //add legend title
   legend
     .append("text")
-    .attr("x", -10)
-    .attr("y", -20)
+    .attr("x", -8)
+    .attr("y", -16)
     .attr("dy", ".35em")
-    .text("Nombre de fans Deezer");
+    .text(legendTitle);
 });
 </script>
 
