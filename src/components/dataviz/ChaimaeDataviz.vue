@@ -1,19 +1,36 @@
 <template>
-  <div>
-    <h2>Nuage de Points - Artistes</h2>
-    <svg id="chart" class="bg-neutral-200 rounded-lg"></svg>
+  <!--add a grid to display the title the chart and the artist card-->
+  <h1 class="text-3xl font-bold text-center">Nuage de Points - Artistes</h1>
+  <div class="flex gap-8">
+    <!-- Nuage de points -->
+
+      <svg id="chart" class="bg-neutral-200 rounded-lg "></svg>
+
+    <!-- Composant artist card à droite du nuage de points s'affiche onclick sur circle -->
+    <div>
+      <ArtistCard v-if="selectedArtist" :artist="selectedArtist"  />
+      <div v-else>
+        <p>Artistes.</p>
+      </div>
+    </div>
+
+
     <div class="h-4"></div>
   </div>
+
+
 </template>
 
 <script setup lang="ts">
 import * as d3 from "d3";
 import { ref, onMounted } from "vue";
+import ArtistCard from "../artist/ArtistCard.vue";
 const data = ref(null);
 const chart = ref(null);
 const legendTitle = "Nombre de fans Deezer"
 const yAxisLabel = "Moyenne de fans par album"
 const xAxisLabel = "Nombre d'albums"
+const selectedArtist = ref(null);
 
 onMounted(async () => {
   // Importing data from json file
@@ -114,6 +131,32 @@ onMounted(async () => {
     .attr("y", -16)
     .attr("dy", ".35em")
     .text(legendTitle);
+  //add on hover tooltip
+  chart
+    .selectAll("circle")
+    .on("mouseover", function (event, d) {
+      d3.select(this).attr("r", 8);
+      chart
+        .append("text")
+        .attr("id", "tooltip")
+        .attr("x", xScale(d.nbAlbums) + 8)
+        .attr("y", yScale(d.avgAlbumsFans) - 8)
+        .text(d.artist + " (" + d.deezerFans + " deezer fans)")
+        .style("font-size", "12px")
+        .style("font-weight", "bold");
+    })
+    .on("mouseout", function (event, d) {
+      d3.select(this).attr("r", 4);
+      d3.select("#tooltip").remove();
+    });
+  //add on click event
+  chart
+    .selectAll("circle")
+    .on("click", function (event, d) {
+      selectedArtist.value = d;
+      console.log(selectedArtist.value);
+    });
+
 });
 </script>
 
@@ -125,9 +168,6 @@ h2 {
   font-weight: bold;
   margin-bottom: 20px;
 }
-/* Add style to svg*/
-svg {
-  display: block;
-  margin: auto;
-}
+
+
 </style>
