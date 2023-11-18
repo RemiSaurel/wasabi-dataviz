@@ -25,6 +25,8 @@
 import * as d3 from "d3";
 import { ref, onMounted } from "vue";
 import ArtistCard from "../artist/ArtistCard.vue";
+import { formatNumber } from '../../utils/functions';
+
 const data = ref(null);
 const chart = ref(null);
 const legendTitle = "Nombre de fans Deezer"
@@ -141,7 +143,7 @@ onMounted(async () => {
         .attr("id", "tooltip")
         .attr("x", xScale(d.nbAlbums) + 8)
         .attr("y", yScale(d.avgAlbumsFans) - 8)
-        .text(d.artist + " (" + d.deezerFans + " deezer fans)")
+        .text(d.artist + " (" + formatNumber(d.deezerFans) + " deezer fans)")
         .style("font-size", "12px")
         .style("font-weight", "bold");
     })

@@ -1,36 +1,20 @@
 <template>
   <!-- onchange of artist display artist -->
-  <div v-if="artist" class="artist-card bg-">
+  <div v-if="artist" class="bg-neutral-200 rounded-lg p-4 hover:bg-neutral-300 transition-all duration-400">
     <div>
-      <h2 >{{ artist.artist }}</h2>
+      <h2 class="text-xl font-bold uppercase">{{ artist.artist }}</h2>
     </div>
-    <div>
-      <p>Nombre d'albums: {{ artist.nbAlbums }}</p>
-      <p>Nombre de chansons: {{ artist.nbSongs }}</p>
-      <p>Nombre de fans Deezer: {{ artist.deezerFans }}</p>
+    <div class="flex flex-col gap-4">
+      <span>Nombre d'albums: {{ artist.nbAlbums }}</span>
+      <span>Nombre de chansons: {{ artist.nbSongs }}</span>
+      <span>Nombre de fans Deezer: {{ formattedFans }}</span>
     </div>
-
-    <!-- Ajoutez d'autres informations de l'artiste selon vos besoins -->
   </div>
 </template>
 
 <script setup>
+import { formatNumber } from '../../utils/functions';
 const { artist } = defineProps(['artist']);
+
+const formattedFans = formatNumber(artist.deezerFans);
 </script>
-<style scoped>
-.artist-card {
-  border: 8px solid cadetblue;
-  border-radius: 8px;
-  padding: -100px; /* Ajustez la valeur de padding selon vos besoins */
-  width: 300px;
-  height: 300px;
-}
-h2 {
-  font-size: 1.5rem;
-  font-weight: bold;
-  text-align: center;
-  color: brown;
-}
-
-
-</style>
