@@ -31,7 +31,7 @@
 
 
       <div class="mt-8">
-        <ArtistCard v-if="selectedArtist" :artist="selectedArtist" />
+        <ArtistCard v-if="selectedArtist" :artist="selectedArtist" :lifeSpan="selectedLifeSpan"/>
       </div>
 
     </div>
@@ -57,14 +57,20 @@ const xAxisLabel = "Nombre d'albums"
 const selectedArtist = ref(null);
 const selectedNbSongs = ref("all");
 const selectedDeezerFans = ref("all");
+const lifeSpan = ref(null);
+const selectedLifeSpan = ref(null);
 
 onMounted(async () => {
   // Importing data from json file
-  const response = await fetch(
+  const response_artist = await fetch(
     import.meta.env.BASE_URL + "data/ch_artists_infos.json",
   );
 
-  data.value = await response.json();
+  data.value = await response_artist.json();
+  const response_lifespan = await fetch(
+    import.meta.env.BASE_URL + "data/ch_lifespan.json",
+  );
+  lifeSpan.value = await response_lifespan.json();
   // Set the dimensions and margins of the graph
   const margin = { top: 24, right: 72, bottom: 48, left: 96 };
   const width = 1000 - margin.left - margin.right;
@@ -84,7 +90,12 @@ onMounted(async () => {
     .range([0, width - 200]);
 
   const xAxis = d3.axisBottom(xScale);
-  chart.append("g").attr("transform", `translate(0, ${height})`).call(xAxis);
+  chart.append("g").attr("transform", `translate(0, ${height})`)
+      .call(xAxis)
+      .selectAll("text")
+      .style("font-weight", "bold")
+      .style("font-size", "12px")
+      .style("text-anchor", "end");
 
   const yScale = d3
     .scaleLinear()
@@ -92,7 +103,14 @@ onMounted(async () => {
     .range([height, 0]);
 
   const yAxis = d3.axisLeft(yScale);
-  chart.append("g").call(yAxis);
+  chart.append("g")
+      .call(yAxis)
+      .selectAll("text")
+      .style("font-weight", "bold")
+      .style("font-size", "12px")
+      .style("text-anchor", "end")
+      .attr("dx", "-.8em")
+  ;
   //add labels to X and Y axis
   chart
     .append("text")
@@ -186,7 +204,11 @@ onMounted(async () => {
     .selectAll("circle")
     .on("click", function (event, d) {
       selectedArtist.value = d;
-      console.log(selectedArtist.value);
+      //find the artist in the lifespan data
+      selectedLifeSpan.value = lifeSpan.value.find(
+        (artist) => artist.artist == d.artist
+      );
+      console.log(selectedLifeSpan.value);
     });
   //add filter to choose by catégories of nbSongs
   const filter = d3.select("#nbSongs");
