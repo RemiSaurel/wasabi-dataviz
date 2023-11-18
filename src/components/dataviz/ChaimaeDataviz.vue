@@ -2,16 +2,38 @@
   <!--add a grid to display the title the chart and the artist card-->
   <h1 class="text-3xl font-bold text-center">Nuage de Points - Artistes</h1>
   <div class="flex gap-8">
-    <!-- Nuage de points -->
-
       <svg id="chart" class="bg-neutral-200 rounded-lg "></svg>
-
-    <!-- Composant artist card à droite du nuage de points s'affiche onclick sur circle -->
-    <div>
-      <ArtistCard v-if="selectedArtist" :artist="selectedArtist"  />
-      <div v-else>
-        <p>Artistes.</p>
+    <div class="margin-20">
+      <label for="nbSongs" class="block text-lg font-medium text-gray-700 mt-8">Nombre de chansons:</label>
+      <div class="mt-4 relative rounded-md shadow-sm">
+        <select v-model="selectedNbSongs" id="nbSongs" name="nbSongs" class="form-select block w-full py-2 pl-3 pr-10 mt-1 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+          <option value="all">Tous</option>
+          <option value="0-50">0 - 50</option>
+          <option value="50-100">50 - 100</option>
+          <option value="100-200">100 - 200</option>
+          <option value="200-500">200 - 500</option>
+          <option value="500-1000">500 - 1000</option>
+        </select>
       </div>
+      <!--add select for deezer fans using the scale-->
+      <label for="deezerFans" class="block text-lg font-medium text-gray-700 mt-8">Nombre de fans Deezer:</label>
+      <div class="mt-4 relative rounded-md shadow-sm">
+        <select v-model="selectedDeezerFans" id="deezerFans" name="deezerFans" class="form-select block w-full py-2 pl-3 pr-10 mt-1 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+          <option value="all">Tous</option>
+          <option value="0-200000">0 - 200 000</option>
+          <option value="200000-4000000">200 000 - 400 000</option>
+          <option value="4000000-6000000">400 000 - 600 000</option>
+          <option value="6000000-8000000">600 000 - 800 000</option>
+          <option value="8000000-10000000">800 000 - 1 000 000</option>
+        </select>
+      </div>
+
+
+
+      <div class="mt-8">
+        <ArtistCard v-if="selectedArtist" :artist="selectedArtist" />
+      </div>
+
     </div>
 
 
@@ -33,6 +55,8 @@ const legendTitle = "Nombre de fans Deezer"
 const yAxisLabel = "Moyenne de fans par album"
 const xAxisLabel = "Nombre d'albums"
 const selectedArtist = ref(null);
+const selectedNbSongs = ref("all");
+const selectedDeezerFans = ref("all");
 
 onMounted(async () => {
   // Importing data from json file
@@ -75,7 +99,9 @@ onMounted(async () => {
     .attr("text-anchor", "end")
     .attr("x", width / 2)
     .attr("y", height + 40)
-    .text(xAxisLabel);
+    .text(xAxisLabel)
+  .style("font-size", "12px")
+  .style("font-weight", "bold");
   // Y axis label:
   chart
     .append("text")
@@ -83,7 +109,11 @@ onMounted(async () => {
     .attr("transform", "rotate(-90)")
     .attr("y", -margin.left + 24)
     .attr("x", -margin.top - height / 2 + 104)
-    .text(yAxisLabel);
+    .text(yAxisLabel)
+  .style("font-size", "12px")
+  .style("font-weight", "bold")
+  .style("text-anchor", "middle")
+  .style("fill", "black");
 
   // Create a sequential color scale for deezer fans
   const colorScale = d3
@@ -129,7 +159,7 @@ onMounted(async () => {
   //add legend title
   legend
     .append("text")
-    .attr("x", -8)
+    .attr("x", -24)
     .attr("y", -16)
     .attr("dy", ".35em")
     .text(legendTitle);
@@ -158,6 +188,53 @@ onMounted(async () => {
       selectedArtist.value = d;
       console.log(selectedArtist.value);
     });
+  //add filter to choose by catégories of nbSongs
+  const filter = d3.select("#nbSongs");
+  filter.on("change", function (event, d) {
+    selectedNbSongs.value = this.value;
+    console.log(selectedNbSongs.value);
+    if (selectedNbSongs.value == "all") {
+      chart.selectAll("circle").attr("visibility", "visible");
+    } else {
+      chart
+        .selectAll("circle")
+        .attr("visibility", "hidden")
+        .filter(function (d) {
+          return (
+            d.nbSongs >= selectedNbSongs.value.split("-")[0] &&
+            d.nbSongs <= selectedNbSongs.value.split("-")[1]
+          );
+        })
+        .attr("visibility", "visible");
+    }
+
+  });
+  //add filter to choose by scale of deezer fans
+  const filter2 = d3.select("#deezerFans");
+  filter2.on("change", function (event, d) {
+    selectedDeezerFans.value = this.value;
+    console.log(selectedDeezerFans.value);
+    if (selectedDeezerFans.value == "all") {
+      chart.selectAll("circle").attr("visibility", "visible");
+    } else {
+      chart
+        .selectAll("circle")
+        .attr("visibility", "hidden")
+        .filter(function (d) {
+          return (
+            d.deezerFans >= selectedDeezerFans.value.split("-")[0] &&
+            d.deezerFans <= selectedDeezerFans.value.split("-")[1]
+          );
+        })
+        .attr("visibility", "visible");
+    }
+
+  });
+
+
+
+
+
 
 });
 </script>
