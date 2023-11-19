@@ -1,5 +1,5 @@
 <template>
-  <LoadingSpinner v-if="isLoading" :isLoading="isLoading" />
+  <LoadingSpinner v-if="isLoading" :isLoading="isLoading"/>
   <svg></svg>
 </template>
 
@@ -18,20 +18,28 @@ onMounted(async () => {
   // Specify the dimensions of the chart.
   const data_without_unknown = {
     "name": "All genres",
-    "children" : data.children.filter((d) => d.name !== "Unknown")
+    "children": data.children.filter((d) => d.name !== "Unknown")
   };
+  //remove all the artists with less then 50 000 fans
+  for (let i = 0; i < data_without_unknown.children.length; i++) {
+    data_without_unknown.children[i].children = data_without_unknown.children[i].children.filter((d) => d.nbFans > 50000);
+  }
 
-  const width = 900;
+  const width = 928;
   const height = width;
-  const margin = 1; // to avoid clipping the root circle stroke
 
   // Specify the number format for values.
   const format = d3.format(",d");
 
   // Create the pack layout.
   const pack = d3.pack()
-      .size([width - margin * 2, height - margin * 2])
+      .size([width, height])
       .padding(3);
+
+  // Create the color scale.
+  const color = d3.scaleLinear()
+      .domain([0, 2])
+      .range(["#B0C4DE", "#12427C"]);
 
   // Compute the hierarchy from the JSON data; recursively sum the
   // values for each node; sort the tree by descending value; lastly
@@ -44,16 +52,41 @@ onMounted(async () => {
   const svg = d3.select("svg")
       .attr("width", width)
       .attr("height", height)
-      .attr("viewBox", [-margin, -margin, width, height])
-      .attr("style", "width: 100%; height: auto; font: 5px sans-serif;")
+      .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
+      .attr("style", "width: 100%; height: 100%; margin : 2 0 0 0; font: 5px sans-serif;")
       .attr("text-anchor", "middle");
 
+
+
   // Place each node according to the layout’s x and y values.
+  // Append the nodes.
   const node = svg.append("g")
-      .selectAll()
+      .selectAll("circle")
       .data(root.descendants())
-      .join("g")
-      .attr("transform", d => `translate(${d.x},${d.y})`);
+      .join("circle")
+      .attr("fill", d => d.children ? color(d.depth) : "white")
+      .on("mouseover", function (event, d) {
+        setupTooltip(tooltip, event, d);
+        d3.select(this).attr("stroke", "#000");
+      })
+      .on("mouseout", function () {
+        tooltip.style("visibility", "hidden");
+        d3.select(this).attr("stroke", null);
+      })
+      .on("click", (event, d) => focus !== d && (zoom(event, d), event.stopPropagation()));
+
+  // Append the text labels.
+  const label = svg.append("g")
+      .style("font", "10px sans-serif")
+      .attr("pointer-events", "none")
+      .attr("text-anchor", "middle")
+      .selectAll("text")
+      .data(root.descendants())
+      .join("text")
+      .style("fill-opacity", d => d.parent === root ? 1 : 0)
+      .style("display", d => d.parent === root ? "inline" : "none")
+      .text(d => d.data.name)
+      .attr("clip-path", d => `circle(${d.r})`);
 
   // Create a tooltip element
   const tooltip = d3.select("body")
@@ -98,48 +131,39 @@ onMounted(async () => {
 
   };
 
-  // Add a filled or stroked circle.
-  node.append("circle")
-      .attr("fill", d => d.children ? "#FFFFFF" : "#B0C4DE")
-      .attr("stroke", d => d.children ? "#22427C" : null)
-      .attr("r", d => d.r)
-      .on("mouseenter", function (event, d) {
-        setupTooltip(tooltip, event, d);
+  svg.on("click", (event) => zoom(event, root));
+  let focus = root;
+  let view;
+  zoomTo([focus.x, focus.y, focus.r * 2]);
 
-        d3.select(this).attr("fill", "#22427C");
-        // Cursor becomes a pointer
-        d3.select(this).attr("cursor", "pointer");
-      })
-      .on("mouseleave", function (event, d) {
-        // Hide and clear the tooltip
-        tooltip.style("visibility", "hidden");
-        if(d.data.nbFans) {
-          d3.select(this).attr("fill", "#B0C4DE");
-        } else {
-          d3.select(this).attr("fill", "#FFFFFF");
-        }
-      })
+  function zoomTo(v) {
+    const k = width / v[2];
 
-  // Add a label to leaf nodes.
-  const text = node
-      .filter(d => !d.children && d.r > 10)
-      .append("text")
-      .attr("clip-path", d => `circle(${d.r})`);
+    view = v;
 
-  // Add a tspan for each CamelCase-separated word.
-  text.selectAll()
-      .data(d => d.data.name.split(/(?=[A-Z][a-z])|\s+/g))
-      .join("tspan")
-      .attr("x", 0)
-      .attr("y", (d, i, nodes) => `${i - nodes.length / 2 + 0.35}em`)
-      .text(d => d);
+    label.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
+    node.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
+    node.attr("r", d => d.r * k);
+  }
 
-  // Add a tspan for the node’s value.
-  text.append("tspan")
-      .attr("x", 0)
-      .attr("y", d => `${d.data.name.split(/(?=[A-Z][a-z])|\s+/g).length / 2 + 0.35}em`)
-      .attr("fill-opacity", 0.7)
-      .text(d => formatNumber(d.value));
+  function zoom(event, d) {
+    focus = d;
+
+    const transition = svg.transition()
+        .duration(event.altKey ? 7500 : 750)
+        .tween("zoom", d => {
+          const i = d3.interpolateZoom(view, [focus.x, focus.y, focus.r * 2]);
+          return t => zoomTo(i(t));
+        });
+
+    label
+        .filter(function(d) { return d.parent === focus || this.style.display === "inline"; })
+        .filter(d => d.r > 10)
+        .transition(transition)
+        .style("fill-opacity", d => d.parent === focus ? 1 : 0)
+        .on("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
+        .on("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+  }
 
   isLoading.value = false;
 });
