@@ -24,6 +24,8 @@ onMounted(async () => {
   for (let i = 0; i < data_without_unknown.children.length; i++) {
     data_without_unknown.children[i].children = data_without_unknown.children[i].children.filter((d) => d.nbFans > 50000);
   }
+  //remove all the genre without artists
+  data_without_unknown.children = data_without_unknown.children.filter((d) => d.children.length > 0);
 
   const width = 928;
   const height = width;
@@ -64,7 +66,7 @@ onMounted(async () => {
       .selectAll("circle")
       .data(root.descendants())
       .join("circle")
-      .attr("fill", d => d.children ? color(d.depth) : "white")
+      .attr("fill", d => d.children ? color(d.depth) : "#12427C")
       .on("mouseover", function (event, d) {
         setupTooltip(tooltip, event, d);
         d3.select(this).attr("stroke", "#000");
@@ -75,17 +77,24 @@ onMounted(async () => {
       })
       .on("click", (event, d) => focus !== d && (zoom(event, d), event.stopPropagation()));
 
+  let fontsize = d3.scaleOrdinal()
+      .domain([1,3])
+      .range([15,20])
+
   // Append the text labels.
   const label = svg.append("g")
-      .style("font", "10px sans-serif")
       .attr("pointer-events", "none")
       .attr("text-anchor", "middle")
       .selectAll("text")
       .data(root.descendants())
-      .join("text")
-      .style("fill-opacity", d => d.parent === root ? 1 : 0)
-      .style("display", d => d.parent === root ? "inline" : "none")
+      .enter().append("text")
+      .style("fill-opacity", d => d.depth === 1 ? 1 : 0)
+      .style("display", d => d.depth < 1 ? "none" : "inline")
+      .style("font", d => fontsize(d.depth) + "px arial")
       .text(d => d.data.name)
+      .style("fill", "white")
+      .style("text-shadow", "2px 2px 0px black")
+      .style("font-weight", "bold")
       .attr("clip-path", d => `circle(${d.r})`);
 
   // Create a tooltip element
@@ -141,7 +150,9 @@ onMounted(async () => {
 
     view = v;
 
-    label.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
+    label
+        .attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`)
+        .attr("clip-path", d => `circle(${d.r * k})`);
     node.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
     node.attr("r", d => d.r * k);
   }
@@ -156,13 +167,13 @@ onMounted(async () => {
           return t => zoomTo(i(t));
         });
 
+    console.log(d);
     label
         .filter(function(d) { return d.parent === focus || this.style.display === "inline"; })
-        .filter(d => d.r > 10)
         .transition(transition)
         .style("fill-opacity", d => d.parent === focus ? 1 : 0)
         .on("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
-        .on("end", function(d) { if (d.parent !== focus) this.style.display = "none"; });
+        .on("end", function(d) { if (d.parent !== focus) this.style.display = "none";});
   }
 
   isLoading.value = false;
