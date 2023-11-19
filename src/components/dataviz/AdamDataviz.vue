@@ -14,24 +14,34 @@ import LoadingSpinner from "../LoadingSpinner.vue";
 const isLoading = ref(true);
 
 onMounted(async () => {
+
+  //Retrieving the file
   const data = await d3.json(import.meta.env.BASE_URL + "data/full_genres_clean.json");
-  // Specify the dimensions of the chart.
+
+  //Removing the unknown genre (too big and not interesting)
   const data_without_unknown = {
     "name": "All genres",
     "children": data.children.filter((d) => d.name !== "Unknown")
   };
-  //remove all the artists with less then 50 000 fans
+
+  //Removing all the artists with less then 50k fans
   for (let i = 0; i < data_without_unknown.children.length; i++) {
     data_without_unknown.children[i].children = data_without_unknown.children[i].children.filter((d) => d.nbFans > 50000);
   }
-  //remove all the genre without artists
+
+  //Removing all the genres without any artists
   data_without_unknown.children = data_without_unknown.children.filter((d) => d.children.length > 0);
 
+  // Specify the dimensions of the chart.
   const width = 928;
   const height = width;
 
   // Specify the number format for values.
   const format = d3.format(",d");
+
+  let fontsize = d3.scaleOrdinal()
+      .domain([1,3])
+      .range([12,16])
 
   // Create the pack layout.
   const pack = d3.pack()
@@ -58,28 +68,23 @@ onMounted(async () => {
       .attr("style", "width: 100%; height: 100%; margin : 2 0 0 0; font: 5px sans-serif;")
       .attr("text-anchor", "middle");
 
-
-
   // Place each node according to the layout’s x and y values.
   // Append the nodes.
   const node = svg.append("g")
       .selectAll("circle")
       .data(root.descendants())
       .join("circle")
-      .attr("fill", d => d.children ? color(d.depth) : "#12427C")
+      .attr("fill", d => color(d.depth))
+      .style("cursor", "pointer")
       .on("mouseover", function (event, d) {
         setupTooltip(tooltip, event, d);
-        d3.select(this).attr("stroke", "#000");
+        d3.select(this).attr("stroke", d.depth > 1 ? "#fff" : "#000");
       })
       .on("mouseout", function () {
         tooltip.style("visibility", "hidden");
         d3.select(this).attr("stroke", null);
       })
       .on("click", (event, d) => focus !== d && (zoom(event, d), event.stopPropagation()));
-
-  let fontsize = d3.scaleOrdinal()
-      .domain([1,3])
-      .range([15,20])
 
   // Append the text labels.
   const label = svg.append("g")
@@ -89,7 +94,7 @@ onMounted(async () => {
       .data(root.descendants())
       .enter().append("text")
       .style("fill-opacity", d => d.depth === 1 ? 1 : 0)
-      .style("display", d => d.depth < 1 ? "none" : "inline")
+      .style("display", d => d.value < 100000 ? "none" : "inline")
       .style("font", d => fontsize(d.depth) + "px arial")
       .text(d => d.data.name)
       .style("fill", "white")
@@ -152,7 +157,8 @@ onMounted(async () => {
 
     label
         .attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`)
-        .attr("clip-path", d => `circle(${d.r * k})`);
+        .attr("clip-path", d => `circle(${d.r * k})`)
+        .style("display", d => d.value < 200000 && d.depth > 1 ? "none" : "inline")
     node.attr("transform", d => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`);
     node.attr("r", d => d.r * k);
   }
@@ -167,7 +173,7 @@ onMounted(async () => {
           return t => zoomTo(i(t));
         });
 
-    console.log(d);
+    //TODO : show the label on the leafs when zooming
     label
         .filter(function(d) { return d.parent === focus || this.style.display === "inline"; })
         .transition(transition)
