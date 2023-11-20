@@ -35,7 +35,7 @@ onMounted(async () =>
 
   // set the dimensions and margins of the graph
   const margin = { top: 100, right: 100, bottom: 120, left: 50 };
-  const width = 1000 - margin.left - margin.right;
+  const width = 900 - margin.left - margin.right;
   const height = 600 - margin.top - margin.bottom;
   // append the svg object to the body of the page
   const svg = d3.select("#chart")
@@ -49,7 +49,7 @@ onMounted(async () =>
       .domain([
         0,10,15,20,30,40,50,60,70,80,90
       ])
-      .range([0, width/15]);
+      .range([0, width/10]);
 
   svg.append("g")
       .attr("transform", "translate(0," + height + ")")
@@ -103,8 +103,7 @@ onMounted(async () =>
       .style("opacity", "0.7")
       .attr("stroke", "black")
       .on("click", function (event, d) {
-        // Country on the map should be pinging
-        d3.select(this).attr("fill", "#000000");
+        // Reset previous selected artist info
         selectedArtistInfo.value = d;
       })
       .on("mouseenter", function (event, d) {
@@ -112,7 +111,7 @@ onMounted(async () =>
         artistName = d.artist;
         nbAlbums = d.albums.length;
         popularity = d.popularity;
-        d3.select(this).attr("fill", "#FFFF00");
+        d3.select(this).style("filter", "brightness(70%)");
         // Cursor becomes a pointer
         d3.select(this).attr("cursor", "pointer");
       })
@@ -120,7 +119,8 @@ onMounted(async () =>
         // Hide and clear the tooltip
         tooltip.style("visibility", "hidden");
         // Reset the color when mouse leaves
-        d3.select(this).attr("fill", d => (d.members && d.members.length > 0) ? "red" : "#69b3a2");
+          d3.select(this).style("fill", d => (d.members && d.members.length > 0) ? "red" : "#69b3a2");
+          d3.select(this).style("filter", "brightness(100%)");
       });
 
 });
@@ -154,8 +154,21 @@ const setupTooltip = (tooltip, event, d) => {
 </script>
 
 <template>
-  <div class="container">
-    <div class="chart-container">
+  <div class="container mt-6 flex flex-col gap-4 xl:flex-row">
+    <div class="chart-container flex flex-col gap-y-4">
+      <div class="flex items-center justify-evenly">
+        <span class="text-2xl font-bold text-center my-3">Bubble Chart</span>
+        <div class="h-14 w-28 shadow bg-neutral-100 rounded px-2 pt-1 gap-2">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded-full bg-[red] pt-1"></div>
+            <span>Groupes</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-4 rounded-full bg-[#69b3a2] pt-1"></div>
+            <span>Solo</span>
+          </div>
+        </div>
+      </div>
       <svg id="chart" />
     </div>
     <div class="artist-info-container" v-if="selectedArtistInfo">
