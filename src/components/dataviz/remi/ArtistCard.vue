@@ -67,7 +67,7 @@ const getGenre = (genre: string) => {
     v-if="artist"
     @mouseenter="getArtistInfo"
     class="flex flex-col aspect-square justify-between px-4 py-3 bg-neutral-800 rounded-lg transition-all duration-300 group text-white shadow-2xl relative overflow-hidden"
-    :class="!artistPicture ? 'hover:bg-black' : ''"
+    :class="!artistPicture ? 'hover:bg-black' : 'bg-neutral-800'"
   >
     <div class="font-bold flex flex-col gap-2 w-full">
       <span
@@ -92,7 +92,7 @@ const getGenre = (genre: string) => {
       ></div>
       <div v-if="artistPicture">
         <div
-          class="absolute top-0 left-0 w-full h-full bg-black opacity-60 z-10 rounded-lg"
+          class="absolute top-0 left-0 w-full h-full bg-neutral-800 opacity-60 z-10 rounded-lg"
         ></div>
         <div
           class="absolute rounded-lg inset-0 group-hover:scale-125 duration-500 ease-in-out transition-all"
