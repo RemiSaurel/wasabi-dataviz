@@ -1,16 +1,16 @@
 <template>
   <!-- onchange of artist display artist -->
-  <div v-if="artist" class="bg-neutral-200 rounded-lg p-4 hover:bg-neutral-300 transition-all duration-400 ">
-    <div>
-      <h2 class="text-xl font-bold uppercase">{{ artist.artist }}</h2>
-    </div>
-    <div class="flex flex-col gap-4">
-      <span>Nombre d'albums: {{ artist.nbAlbums }}</span>
-      <span>Nombre de chansons: {{ artist.nbSongs }}</span>
-      <span>Nombre de fans Deezer: {{ formattedFans }}</span>
-      <span>Durée de carrière: {{ lifeSpan.duration }}</span>
-      <span>Début de carrière: {{ lifeSpan.begin }}</span>
-      <span>Fin de carrière: {{ lifeSpan.end }}</span>
+  <div v-if="artist" class="tooltip bg-neutral-800 text-lg text-white pt-1 p-2 rounded-md ">
+    <div class="flex flex-col p-1 gap-1">
+      <span class="text-xl font-bold uppercase">{{ artist.artist }}</span>
+      <span class="w-full h-[2px] bg-white"></span>
+
+      <span>{{ artist.nbAlbums }} Albums</span>
+      <span>{{ artist.nbSongs }} Chansons</span>
+      <span>{{ formattedFans }} Fans sur deezer</span>
+      <span>{{ lifeSpan.duration }} Années de carrière</span>
+      <span>Début: {{ lifeSpan.begin }}</span>
+      <span>Fin: {{ lifeSpan.end }}</span>
     </div>
   </div>
 </template>

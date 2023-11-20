@@ -1,9 +1,10 @@
 <template>
   <!--add a grid to display the title the chart and the artist card-->
-  <h1 class="text-3xl font-bold text-center">Nuage de Points - Artistes</h1>
   <div class="flex gap-8">
       <svg id="chart" class="bg-neutral-200 rounded-lg "></svg>
     <div class="margin-20">
+
+
       <label for="nbSongs" class="block text-lg font-medium text-gray-700 mt-8">Nombre de chansons:</label>
       <div class="mt-4 relative rounded-md shadow-sm">
         <select v-model="selectedNbSongs" id="nbSongs" name="nbSongs" class="form-select block w-full py-2 pl-3 pr-10 mt-1 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
@@ -59,6 +60,7 @@ const selectedNbSongs = ref("all");
 const selectedDeezerFans = ref("all");
 const lifeSpan = ref(null);
 const selectedLifeSpan = ref(null);
+
 
 onMounted(async () => {
   // Importing data from json file
@@ -138,15 +140,17 @@ onMounted(async () => {
     .scaleSequential(d3.interpolateReds)
     .domain([0, d3.max(data.value, (d) => d.deezerFans)]);
 
+
   chart
-    .selectAll("circle")
-    .data(data.value)
-    .enter()
-    .append("circle")
-    .attr("cx", (d) => xScale(d.nbAlbums))
-    .attr("cy", (d) => yScale(d.avgAlbumsFans))
-    .attr("r", 4)
-    .attr("fill", (d) => colorScale(d.deezerFans));
+      .selectAll("rect")
+      .data(data.value)
+      .enter()
+      .append("rect")
+      .attr("x", (d) => xScale(d.nbAlbums))
+      .attr("y", (d) => yScale(d.avgAlbumsFans))
+      .attr("width", 8) // Largeur des barres
+      .attr("height", (d) => height - yScale(d.avgAlbumsFans))
+      .attr("fill", (d) => colorScale(d.deezerFans));
   //add legend for color scale
   const legend = chart
     .append("g")
@@ -181,27 +185,34 @@ onMounted(async () => {
     .attr("y", -16)
     .attr("dy", ".35em")
     .text(legendTitle);
+  const tooltip = d3
+      .select("body")
+      .append("div")
+      .attr(
+          "class",
+          "tooltip bg-neutral-800 text-lg text-white pt-1 p-2 rounded-md",
+      )
+      .style("position", "absolute")
+      .style("z-index", "10")
+      .style("visibility", "hidden");
+
   //add on hover tooltip
   chart
-    .selectAll("circle")
+    .selectAll("rect")
     .on("mouseover", function (event, d) {
-      d3.select(this).attr("r", 8);
-      chart
-        .append("text")
-        .attr("id", "tooltip")
-        .attr("x", xScale(d.nbAlbums) + 8)
-        .attr("y", yScale(d.avgAlbumsFans) - 8)
-        .text(d.artist + " (" + formatNumber(d.deezerFans) + " deezer fans)")
-        .style("font-size", "12px")
-        .style("font-weight", "bold");
+      setUpTooltip(tooltip, event, d);
+      // aggrandir le rectangle
+      d3.select(this).attr("width", 12);
+
     })
     .on("mouseout", function (event, d) {
-      d3.select(this).attr("r", 4);
-      d3.select("#tooltip").remove();
+      tooltip.style("visibility", "hidden");
+      // rétrécir le rectangle
+      d3.select(this).attr("width", 8);
     });
   //add on click event
   chart
-    .selectAll("circle")
+    .selectAll("rect")
     .on("click", function (event, d) {
       selectedArtist.value = d;
       //find the artist in the lifespan data
@@ -210,16 +221,19 @@ onMounted(async () => {
       );
       console.log(selectedLifeSpan.value);
     });
+  let selectedArtists = data.value.length;
   //add filter to choose by catégories of nbSongs
   const filter = d3.select("#nbSongs");
   filter.on("change", function (event, d) {
     selectedNbSongs.value = this.value;
     console.log(selectedNbSongs.value);
     if (selectedNbSongs.value == "all") {
-      chart.selectAll("circle").attr("visibility", "visible");
+      chart.selectAll("rect").attr("visibility", "visible");
+      selectedArtists = data.value.length;
+      nbArtists.text("Nombre d'artistes: " + selectedArtists);
     } else {
-      chart
-        .selectAll("circle")
+      let selected = chart
+        .selectAll("rect")
         .attr("visibility", "hidden")
         .filter(function (d) {
           return (
@@ -228,19 +242,26 @@ onMounted(async () => {
           );
         })
         .attr("visibility", "visible");
+      legend.selectAll("rect").attr("visibility", "visible");
+      //update number of artists affichés dans le chart
+      selectedArtists = selected._groups[0].length;
+      nbArtists.text("Nombre d'artistes: " + selectedArtists);
     }
 
   });
+
   //add filter to choose by scale of deezer fans
   const filter2 = d3.select("#deezerFans");
   filter2.on("change", function (event, d) {
     selectedDeezerFans.value = this.value;
     console.log(selectedDeezerFans.value);
     if (selectedDeezerFans.value == "all") {
-      chart.selectAll("circle").attr("visibility", "visible");
+      chart.selectAll("rect").attr("visibility", "visible");
+      selectedArtists = data.value.length;
+      nbArtists.text("Nombre d'artistes: " + selectedArtists)
     } else {
-      chart
-        .selectAll("circle")
+      let selected = chart
+        .selectAll("rect")
         .attr("visibility", "hidden")
         .filter(function (d) {
           return (
@@ -249,11 +270,50 @@ onMounted(async () => {
           );
         })
         .attr("visibility", "visible");
+      legend.selectAll("rect").attr("visibility", "visible");
+      //update number of artists affichés dans le chart
+      selectedArtists = selected._groups[0].length;
+      nbArtists.text("Nombre d'artistes: " + selectedArtists)
+
+
     }
 
+
   });
+  // add number of artists affichés dans le chart
+    selectedArtists = data.value.length;
+  const nbArtists = chart
+    .append("text")
+    .attr("x", width - 104)
+    .attr("y", height - 24)
+    .attr("dy", ".35em")
+    .text("Nombre d'artistes: " + selectedArtists)
+  .style("font-size", "12px")
+  .style("font-weight", "bold");
 
 
+
+
+
+
+  //add tooltip function
+  const setUpTooltip = (tooltip, event, d) => {
+    tooltip
+      .html(
+          `<div class="flex flex-col p-1 gap-1">
+          <span class="text-xl font-bold">${d.artist}</span>
+           <span class="w-full h-[2px] bg-white"></span>
+            <span >${d.nbAlbums} Albums</span>
+        <span>${d.nbSongs} Chansons</span>
+        <span>${formatNumber(
+              d.deezerFans
+          )} Fans deezer </span>
+          </div>`,
+      )
+      .style("visibility", "visible")
+      .style("top", event.pageY - 24 + "px")
+      .style("left", event.pageX + 24 + "px");
+  };
 
 
 
