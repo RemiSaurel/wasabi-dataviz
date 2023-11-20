@@ -1,36 +1,56 @@
 <template>
-  <LoadingSpinner v-if="isLoading" :isLoading="isLoading"/>
-  <svg></svg>
+  <div class="h-[95%]">
+    <LoadingSpinner v-if="isLoading" :isLoading="isLoading"/>
+    <svg></svg>
+  </div>
+  <div class="flex">
+    <b class="w-1/6">Nombre de fans minimum : </b>
+    <input class="w-5/6" type="range" min="50000" max="1000000" v-model="range_nbFans" step="50000">
+    <span>{{ range_nbFans }}</span>
+  </div>
 </template>
 
 <style scoped></style>
-
 <script setup lang="ts">
 import * as d3 from "d3";
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 import {formatNumber} from "../../utils/functions";
 import LoadingSpinner from "../LoadingSpinner.vue";
 
 const isLoading = ref(true);
+const range_nbFans = ref(350000);
+let svg = null;
 
 onMounted(async () => {
+  await constructCircularPacking();
+  isLoading.value = false;
+});
 
-  //Retrieving the file
+//do something when the range_nbFans changes
+watch(() => range_nbFans.value, async () => {
+  // Remove the previous svg
+  isLoading.value = true;
+  svg.selectAll("*").remove();
+  await constructCircularPacking();
+  isLoading.value = false;
+});
+
+async function constructCircularPacking() {
   const data = await d3.json(import.meta.env.BASE_URL + "data/full_genres_clean.json");
 
   //Removing the unknown genre (too big and not interesting)
-  const data_without_unknown = {
+  const dataWithoutUnknown = {
     "name": "All genres",
     "children": data.children.filter((d) => d.name !== "Unknown")
   };
 
   //Removing all the artists with less then 50k fans
-  for (let i = 0; i < data_without_unknown.children.length; i++) {
-    data_without_unknown.children[i].children = data_without_unknown.children[i].children.filter((d) => d.nbFans > 50000);
+  for (let i = 0; i < dataWithoutUnknown.children.length; i++) {
+    dataWithoutUnknown.children[i].children = dataWithoutUnknown.children[i].children.filter((d) => d.nbFans > range_nbFans.value);
   }
 
   //Removing all the genres without any artists
-  data_without_unknown.children = data_without_unknown.children.filter((d) => d.children.length > 0);
+  dataWithoutUnknown.children = dataWithoutUnknown.children.filter((d) => d.children.length > 0);
 
   // Specify the dimensions of the chart.
   const width = 928;
@@ -40,8 +60,8 @@ onMounted(async () => {
   const format = d3.format(",d");
 
   let fontsize = d3.scaleOrdinal()
-      .domain([1,3])
-      .range([12,16])
+      .domain([1, 3])
+      .range([12, 16])
 
   // Create the pack layout.
   const pack = d3.pack()
@@ -56,12 +76,12 @@ onMounted(async () => {
   // Compute the hierarchy from the JSON data; recursively sum the
   // values for each node; sort the tree by descending value; lastly
   // apply the pack layout.
-  const root = pack(d3.hierarchy(data_without_unknown)
+  const root = pack(d3.hierarchy(dataWithoutUnknown)
       .sum(d => d.nbFans)
       .sort((a, b) => b.nbFans - a.nbFans));
 
   // Create the SVG container.
-  const svg = d3.select("svg")
+  svg = d3.select("svg")
       .attr("width", width)
       .attr("height", height)
       .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
@@ -175,13 +195,17 @@ onMounted(async () => {
 
     //TODO : show the label on the leafs when zooming
     label
-        .filter(function(d) { return d.parent === focus || this.style.display === "inline"; })
+        .filter(function (d) {
+          return d.parent === focus || this.style.display === "inline";
+        })
         .transition(transition)
         .style("fill-opacity", d => d.parent === focus ? 1 : 0)
-        .on("start", function(d) { if (d.parent === focus) this.style.display = "inline"; })
-        .on("end", function(d) { if (d.parent !== focus) this.style.display = "none";});
+        .on("start", function (d) {
+          if (d.parent === focus) this.style.display = "inline";
+        })
+        .on("end", function (d) {
+          if (d.parent !== focus) this.style.display = "none";
+        });
   }
-
-  isLoading.value = false;
-});
+}
 </script>
