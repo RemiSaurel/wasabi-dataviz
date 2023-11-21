@@ -48,3 +48,8 @@ button:focus-visible {
         background-color: #ffffff;
     }
 }
+
+.circular-packing {
+    font-size: x-large;
+    text-align: center;
+}
