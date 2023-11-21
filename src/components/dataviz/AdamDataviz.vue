@@ -1,17 +1,20 @@
 <template>
-  <div class="h-[95%]">
+  <h1 class="circular-packing">
+    Circular packing des genres par leur popularité
+  </h1>
+  <div class="h-[90%]">
     <LoadingSpinner v-if="isLoading" :isLoading="isLoading" />
     <svg></svg>
   </div>
   <div class="flex">
     <b class="w-1/6">Nombre de fans minimum : </b>
     <input
-      class="w-5/6"
+      class="w-5/6 accent-[#12427C]"
       type="range"
-      min="50000"
-      max="1000000"
       v-model="range_nbFans"
-      step="50000"
+      :min="nbFansMin"
+      :max="nbFansMax"
+      :step="nbFansStep"
     />
     <span>{{ range_nbFans }}</span>
   </div>
@@ -24,12 +27,15 @@ import { onMounted, ref, watch } from "vue";
 import { formatNumber } from "../../utils/functions";
 import LoadingSpinner from "../LoadingSpinner.vue";
 
+const nbFansMin = ref(50000);
+const nbFansMax = ref(1000000);
+const nbFansStep = ref(50000);
 const isLoading = ref(true);
-const range_nbFans = ref(350000);
+const range_nbFans = ref(500000);
 let svg = null;
 
 onMounted(async () => {
-  await constructCircularPacking();
+  await generateCircularPacking();
   isLoading.value = false;
 });
 
@@ -37,25 +43,15 @@ onMounted(async () => {
 watch(
   () => range_nbFans.value,
   async () => {
-    // Remove the previous svg
     isLoading.value = true;
+    // Remove the existing svg
     svg.selectAll("*").remove();
-    await constructCircularPacking();
+    await generateCircularPacking();
     isLoading.value = false;
-  }
+  },
 );
 
-async function constructCircularPacking() {
-  const data = await d3.json(
-    import.meta.env.BASE_URL + "data/full_genres_clean.json"
-  );
-
-  //Removing the unknown genre (too big and not interesting)
-  const dataWithoutUnknown = {
-    name: "All genres",
-    children: data.children.filter((d) => d.name !== "Unknown"),
-  };
-
+function constructCircularPacking(dataWithoutUnknown: any) {
   //Removing all the artists with less then 50k fans
   for (let i = 0; i < dataWithoutUnknown.children.length; i++) {
     dataWithoutUnknown.children[i].children = dataWithoutUnknown.children[
@@ -65,7 +61,7 @@ async function constructCircularPacking() {
 
   //Removing all the genres without any artists
   dataWithoutUnknown.children = dataWithoutUnknown.children.filter(
-    (d) => d.children.length > 0
+    (d) => d.children.length > 0,
   );
 
   // Specify the dimensions of the chart.
@@ -90,7 +86,7 @@ async function constructCircularPacking() {
     d3
       .hierarchy(dataWithoutUnknown)
       .sum((d) => d.nbFans)
-      .sort((a, b) => b.nbFans - a.nbFans)
+      .sort((a, b) => b.nbFans - a.nbFans),
   );
 
   // Create the SVG container.
@@ -101,7 +97,7 @@ async function constructCircularPacking() {
     .attr("viewBox", `-${width / 2} -${height / 2} ${width} ${height}`)
     .attr(
       "style",
-      "width: 100%; height: 100%; margin : 2 0 0 0; font: 5px sans-serif;"
+      "width: 100%; height: 100%; margin : 2 0 0 0; font: 5px sans-serif;",
     )
     .attr("text-anchor", "middle");
 
@@ -124,7 +120,7 @@ async function constructCircularPacking() {
     })
     .on(
       "click",
-      (event, d) => focus !== d && (zoom(event, d), event.stopPropagation())
+      (event, d) => focus !== d && (zoom(event, d), event.stopPropagation()),
     );
 
   // Append the text labels.
@@ -151,7 +147,7 @@ async function constructCircularPacking() {
     .append("div")
     .attr(
       "class",
-      "tooltip bg-neutral-800 text-lg text-white pt-1 p-2 rounded-md"
+      "tooltip bg-neutral-800 text-lg text-white pt-1 p-2 rounded-md",
     )
     .style("position", "absolute")
     .style("z-index", "10")
@@ -201,15 +197,15 @@ async function constructCircularPacking() {
     label
       .attr(
         "transform",
-        (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`
+        (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`,
       )
       .attr("clip-path", (d) => `circle(${d.r * k})`)
       .style("display", (d) =>
-        d.value < 200000 && d.depth > 1 ? "none" : "inline"
+        d.value < 200000 && d.depth > 1 ? "none" : "inline",
       );
     node.attr(
       "transform",
-      (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`
+      (d) => `translate(${(d.x - v[0]) * k},${(d.y - v[1]) * k})`,
     );
     node.attr("r", (d) => d.r * k);
   }
@@ -239,5 +235,23 @@ async function constructCircularPacking() {
         if (d.parent !== focus) this.style.display = "none";
       });
   }
+}
+
+async function readJson(url: string) {
+  return await d3.json(import.meta.env.BASE_URL + url);
+}
+
+//Removing the unknown genre (too big and not interesting)
+function cleanData(data: any) {
+  return {
+    name: "All genres",
+    children: data.children.filter((d) => d.name !== "Unknown"),
+  };
+}
+
+async function generateCircularPacking() {
+  const data = await readJson("data/full_genres_clean.json");
+  const dataWithoutUnknown = cleanData(data);
+  constructCircularPacking(dataWithoutUnknown);
 }
 </script>
