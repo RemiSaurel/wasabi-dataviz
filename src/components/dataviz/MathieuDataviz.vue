@@ -43,6 +43,15 @@ onMounted(async () => {
     .select("#chart")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
+    .attr("preserveAspectRatio", "xMinYMin meet")
+    .classed("svg-content-responsive", true)
+    // call d3 Zoom that resize the axes
+    .call(
+      d3.zoom().on("zoom", function (event) {
+        svg.attr("transform", event.transform);
+        // Resize the axes
+      }),
+    )
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -73,7 +82,7 @@ onMounted(async () => {
   svg.append("g").call(d3.axisLeft(y));
 
   // Add X axis label
-  svg
+  const xAxis = svg
     .append("text")
     .attr(
       "transform",
@@ -83,7 +92,7 @@ onMounted(async () => {
     .text("Career Length");
 
   // Add Y axis label
-  svg
+  const yAxis = svg
     .append("text")
     .attr("transform", "rotate(-90)")
     .attr("y", 0 - margin.left)
